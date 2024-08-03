@@ -1,34 +1,31 @@
 <?php 
-/**
- * Register/enqueue custom scripts and styles
- */
-add_action( 'wp_enqueue_scripts', function() {
-	// Enqueue your files on the canvas & frontend, not the builder panel. Otherwise custom CSS might affect builder)
-	if ( ! bricks_is_builder_main() ) {
-		wp_enqueue_style( 'bricks-child', get_stylesheet_uri(), ['bricks-frontend'], filemtime( get_stylesheet_directory() . '/style.css' ) );
-	}
-} );
+require_once get_stylesheet_directory() . '/inc/settings.php';
+require_once get_stylesheet_directory() . '/inc/helper.php';
+ft_load_resources(__DIR__ . '/inc/settings');
+ft_load_resources(__DIR__ . '/inc/custom');
 
-/**
- * Register custom elements
- */
-add_action( 'init', function() {
-  $element_files = [
-    __DIR__ . '/elements/title.php',
-  ];
+function ft_enqueue() {
+    wp_enqueue_style( 'main', get_stylesheet_directory_uri() . '/assets/src/scss/main.css', array(), null );
+    if ( ! bricks_is_builder_main() ) {
+        wp_enqueue_style( 'bricks-child', get_stylesheet_uri(), ['bricks-frontend'], filemtime( get_stylesheet_directory() . '/style.css' ) );
+    }
+}
+add_action( 'wp_enqueue_scripts', 'ft_enqueue', 100 );
 
-  foreach ( $element_files as $file ) {
-    \Bricks\Elements::register_element( $file );
-  }
-}, 11 );
+ft_enqueue_recursive_assets('assets/');
 
-/**
- * Add text strings to builder
- */
-add_filter( 'bricks/builder/i18n', function( $i18n ) {
-  // For element category 'custom'
-  $i18n['custom'] = esc_html__( 'Custom', 'bricks' );
+ft_load_resources(__DIR__ . '/dynamic_data_tags');
+//require_once get_stylesheet_directory() . '/custom_dynamic_data_tags.php';
 
-  return $i18n;
-} );
+add_action('init', function() {
+    $directory = __DIR__ . '/custom_elements';
+    $element_files = get_php_files($directory);
 
+    foreach ($element_files as $file) {
+        if (file_exists($file)) {
+            require_once $file;
+            $element_class = 'Custom_' . str_replace('-', '_', basename($file, '.php'));
+            \Bricks\Elements::register_element($file, strtolower(basename($file, '.php')), $element_class);
+        }
+    }
+}, 11);
