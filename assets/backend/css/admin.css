@@ -1,0 +1,59 @@
+.wrap{
+}
+.tt1  {
+   width: 880px;
+   height: 40px;
+}
+.style_css , .head-css , #wp_head_css_frontend , #wp_footer_html_frontend , #wp_head_html_frontend {
+   width: 880px;
+   height: 220px;
+}
+[type="checkbox"] {
+}
+#snn_custom_css{
+   width: 880px;
+   height:330px ;
+}
+
+.ft-switch {
+    display: none !important;
+}
+
+.ft-switch-label {
+    position: relative;
+    display: inline-block;
+    width: 30px;
+    height: 17px;
+    background-color: #ccc;
+    border-radius: 17px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.ft-switch-label::after {
+    content: "";
+    position: absolute;
+    width: 13px;
+    height: 13px;
+    background-color: white;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s;
+}
+
+.ft-switch:checked + .ft-switch-label {
+    background-color: #f59e0b;
+}
+
+.ft-switch:checked + .ft-switch-label::after {
+    transform: translateX(13px);
+}
+
+p.label {
+    display: inline-block;
+    margin-left: 0.75rem;
+}
+input[type="number"] {
+    max-width: 50px;
+}

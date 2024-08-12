@@ -35,7 +35,7 @@ add_action('admin_init', 'ft_move_bricks_menu_setting_field');
 function ft_move_bricks_menu_callback() {
     $options = get_option('ft_settings');
     ?>
-    <input type="checkbox" name="ft_settings[move_bricks_menu]" value="1" <?php checked(isset($options['move_bricks_menu']), 1); ?>>
-    <p style="margin-block:0px;">Enabling this setting will move the Bricks menu item to the end of the WordPress admin menu.</p>
+    <input type="checkbox" id="move_bricks_menu" name="ft_settings[move_bricks_menu]" value="1" class="ft-switch" <?php checked(isset($options['move_bricks_menu']), 1); ?>><label for="move_bricks_menu" class="ft-switch-label"></label>
+    <p class="label">Enabling this setting will move the Bricks menu item to the end of the WordPress admin menu.</p>
     <?php
 }

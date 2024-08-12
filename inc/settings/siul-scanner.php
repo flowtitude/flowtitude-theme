@@ -13,13 +13,8 @@ if (class_exists('SIUL')):
         $wpTheme = wp_get_theme();
         $themeDir = $wpTheme->get_stylesheet_directory();
         
-        $has_parent = $wpTheme->parent() ? true : false;
-        $parentThemeDir = $wpTheme->parent()->get_stylesheet_directory() ?? null;
         foreach ($file_extensions as $extension) {
             $finder->files()->in($themeDir)->name('*.' . $extension);
-            if ($has_parent) {
-                $finder->files()->in($parentThemeDir)->name('*.' . $extension);
-            }
         }
         foreach ($finder as $file) {
             $contents[] = [

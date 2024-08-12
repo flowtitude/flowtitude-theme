@@ -25,29 +25,6 @@ function ft_settings_page_callback() {
             ?>
         </form>
     </div>
-
-    <style>
-        .wrap{
-         }
-        .tt1  {
-            width: 880px;
-            height: 40px;
-        }
-        .style_css , .head-css , #wp_head_css_frontend , #wp_footer_html_frontend , #wp_head_html_frontend {
-            width: 880px;
-            height: 220px;
-        }
-        [type="checkbox"] {
-            width: 16px !important;
-            height: 16px !important;
-            float: left;
-            margin-right: 10px !important;
-        }
-        #snn_custom_css{
-            width: 880px;
-            height:330px ;
-        }
-    </style>
     <?php
 }
 
