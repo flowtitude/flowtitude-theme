@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 function ft_custom_menu_order($menu_ord) {
     $options = get_option('ft_settings');

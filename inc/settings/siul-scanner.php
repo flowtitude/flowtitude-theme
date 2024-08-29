@@ -1,4 +1,6 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 if (class_exists('SIUL')):
     function scanner_flowtitude_provider(): array {
         $file_extensions = [

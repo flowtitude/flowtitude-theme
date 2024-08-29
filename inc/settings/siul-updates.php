@@ -1,4 +1,6 @@
 <?php 
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
 if (class_exists('SIUL')):
     function ft_disable_plugin_updates( $value ) {
         if ( isset($value) && is_object($value) ) {

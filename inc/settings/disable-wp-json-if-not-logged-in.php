@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 function ft_setup_json_disable_field() {
     add_settings_field(
@@ -19,10 +20,9 @@ function ft_json_disable_callback() {
     <?php
 }
 
-// Modifying REST API behavior with updated function naming
 add_filter('rest_authentication_errors', function($result) {
     if (!is_user_logged_in()) {
-        $options = get_option('snn_settings');
+        $options = get_option('ft_settings');
         if (isset($options['disable_json']) && $options['disable_json']) {
             return new WP_Error('rest_not_logged_in', 'You are not logged in.', array('status' => 401));
         }

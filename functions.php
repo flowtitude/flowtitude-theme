@@ -21,6 +21,7 @@ ft_enqueue_recursive_assets('assets/css/');
 ft_enqueue_recursive_assets('assets/js/');
 
 ft_load_resources(__DIR__ . '/dynamic_data_tags');
+ft_load_resources(__DIR__ . '/conditionals');
 
 add_action('init', function() {
     $directory = __DIR__ . '/custom_elements';
@@ -34,3 +35,12 @@ add_action('init', function() {
         }
     }
 }, 11);
+
+function ft_remove_bricks_frontend_css_manually() {
+    echo "
+    <script>
+    document.querySelector('link[href*=\"frontend.min.css\"]').remove();
+    </script>
+    ";
+}
+add_action('admin_footer', 'ft_remove_bricks_frontend_css_manually', 100);

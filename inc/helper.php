@@ -52,3 +52,19 @@ function get_php_files($dir) {
     }
     return $files;
 }
+
+function ft_add_woocommerce_condition_group($groups) {
+
+    $group_name = 'ft_woocommerce';
+
+    foreach ($groups as $group) {
+        if ($group['name'] === $group_name) {
+            return $groups;
+        }
+    }
+    $groups[] = [
+        'name'  => $group_name,
+        'label' => esc_html__('FT Woocommerce', 'bricks'),
+    ];
+    return $groups;
+}

@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 function ft_remove_wp_version() {
   $options = get_option('ft_settings');

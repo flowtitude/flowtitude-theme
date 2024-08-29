@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 function custom_revisions_limit($num, $post) {
     $options = get_option('ft_settings');
     $limit = isset($options['revisions_limit']) ? intval($options['revisions_limit']) : 5;
