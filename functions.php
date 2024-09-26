@@ -5,7 +5,6 @@ ft_load_resources(__DIR__ . '/inc/settings');
 ft_load_resources(__DIR__ . '/inc/custom');
 
 function ft_enqueue() {
-    wp_enqueue_style( 'main', get_stylesheet_directory_uri() . '/assets/src/scss/main.css', array(), null );
     if ( ! bricks_is_builder_main() ) {
         wp_enqueue_style( 'bricks-child', get_stylesheet_uri(), ['bricks-frontend'], filemtime( get_stylesheet_directory() . '/style.css' ) );
     }
