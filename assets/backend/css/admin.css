@@ -43,7 +43,7 @@
 }
 
 .ft-switch:checked + .ft-switch-label {
-    background-color: #f59e0b;
+    background-color: #2271b1;
 }
 
 .ft-switch:checked + .ft-switch-label::after {
@@ -56,4 +56,13 @@ p.label {
 }
 input[type="number"] {
     max-width: 50px;
+}
+
+.badge {
+    background-color: #799cb9;
+    color: b;
+    padding: 0.5em 2em;
+    margin-left: 1em;
+    font-size:12px;
+    font-weight: 500;
 }
