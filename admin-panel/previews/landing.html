@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Transform your business with our powerful SaaS solutions">
+    <title>Flowtitude - Business Transformation Solutions</title>
+    
+    <!-- Tailwind Play CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    
+    <script>
+        async function mixCSS() {
+            try {
+                // Primero obtenemos main.css que contiene todos los imports
+                const mainResponse = await fetch('/wp-content/uploads/windpress/data/main.css');
+                const mainCSS = await mainResponse.text();
+                
+                // Extraemos todas las rutas de archivos CSS, excluyendo los de Tailwind
+                const cssFiles = mainCSS.match(/@import\s+['"](.+?)['"];/g)
+                    .map(imp => imp.match(/@import\s+['"](.+?)['"];/)[1])
+                    .filter(path => !path.includes('tailwindcss/'));
+
+                // Obtenemos el contenido de cada archivo
+                const cssContents = await Promise.all(
+                    cssFiles.map(async file => {
+                        const fullPath = '/wp-content/uploads/windpress/data/' + file.replace('./', '');
+                        const resp = await fetch(fullPath);
+                        return resp.text();
+                    })
+                );
+
+                // Creamos el elemento style
+                const styleElement = document.createElement('style');
+                styleElement.setAttribute('type', 'text/tailwindcss');
+                
+                // Insertamos el CSS manteniendo la estructura original de cada archivo
+                styleElement.textContent = cssContents.join('\n\n');
+                
+                document.head.appendChild(styleElement);
+            } catch (error) {
+                console.error('Error mezclando CSS:', error);
+            }
+        }
+
+        // Ejecutamos la mezcla cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', mixCSS);
+    </script>
+    <style type="text/tailwindcss">
+        @layer base {
+            :root {
+                --ft-text-value: clamp(1rem, 0.9411rem + 0.2299cqi, 1.125rem);
+                --ft-text-scale: 1.15;
+                --ft-text-factor: 1;
+
+                --ft-space-value: clamp(1.125rem, 0.9483rem + 0.6897cqi, 1.5rem);
+                --ft-space-scale: 1.33;
+                --ft-space-factor: 1;
+
+                --ft-container: var(--container-7xl);
+                --ft-padding-content-x: 1rem;
+                --ft-padding-content-y: 4rem;
+
+                --ft-content-space: min(var(--ft-container), 90%);
+                --ft-wide-space: calc(var(--spacing) * 30);
+                --ft-mobile-columns: 6;
+                --ft-tablet-columns: 8;
+
+                --ft-color-text: #666666;
+                --ft-color-background: #dedede;
+
+                --ft-card-xs: 12rem;
+                --ft-card-sm: 14rem;
+                --ft-card-md: 18rem;
+                --ft-card-lg: 24rem;
+                --ft-card-xl: 36rem;
+            }
+        }
+
+        @theme {
+            --font-body: 'Arial';
+            --font-display: 'Poppins';
+
+            --color-primary-50: oklch(93.78% 0.029 9.72);
+            --color-primary-100: oklch(88.57% 0.055 8.42);
+            --color-primary-200: oklch(77.89% 0.113 11.76);
+            --color-primary-300: oklch(68.62% 0.175 14.86);
+            --color-primary-400: oklch(61.82% 0.221 20.08);
+            --color-primary-500: oklch(54.78% 0.214 23.56);
+            --color-primary-600: oklch(46.89% 0.182 23.37);
+            --color-primary-700: oklch(38.22% 0.146 22.79);
+            --color-primary-800: oklch(29.05% 0.108 20.93);
+            --color-primary-900: oklch(18.96% 0.064 16.92);
+            --color-primary-950: oklch(12.88% 0.038 12.6);
+            
+            --color-secondary-50: oklch(96.05% 0.005 258.32);
+            --color-secondary-100: oklch(91.98% 0.01 252.82);
+            --color-secondary-200: oklch(84.75% 0.017 250.86);
+            --color-secondary-300: oklch(76.62% 0.027 248.18);
+            --color-secondary-400: oklch(68.86% 0.036 251.11);
+            --color-secondary-500: oklch(60.44% 0.047 250.74);
+            --color-secondary-600: oklch(51.65% 0.042 251.08);
+            --color-secondary-700: oklch(42.04% 0.034 248.63);
+            --color-secondary-800: oklch(32.44% 0.024 251.01);
+            --color-secondary-900: oklch(21.1% 0.014 253.14);
+            --color-secondary-950: oklch(15.66% 0.007 237.09);
+
+            --leading-none: 1em;
+            --leading-tight: 1.2em;
+            --leading-snug: 1.375em;
+            --leading-normal: 1.5em;
+            --leading-relaxed: 1.625em;
+            --leading-loose: 2em;
+
+            --spacing: 0.25rem;
+
+            --spacing-content-2xs: calc(var(--spacing-content-xs) / var(--ft-space-scale));
+            --spacing-content-xs: calc(var(--spacing-content-sm) / var(--ft-space-scale));
+            --spacing-content-sm: calc(var(--spacing-content-md) / var(--ft-space-scale));
+            --spacing-content-md: calc(var(--ft-space-value) * var(--ft-space-factor));
+            --spacing-content-lg: calc(var(--spacing-content-md) * var(--ft-space-scale));
+            --spacing-content-xl: calc(var(--spacing-content-lg) * var(--ft-space-scale));
+            --spacing-content-2xl: calc(var(--spacing-content-xl) * var(--ft-space-scale));
+            --spacing-content: var(--spacing-content-xs);
+
+            --spacing-block-sm: calc(var(--spacing-block) / 1.618);
+            --spacing-block: calc(var(--ft-space-value) * 0.666);
+            --spacing-block-lg: calc(var(--spacing-block) * 1.618);
+
+            --spacing-columns-sm: calc(var(--spacing-columns) / 1.618);
+            --spacing-columns: calc(var(--ft-space-value) * 1);
+            --spacing-columns-lg: calc(var(--spacing-columns) * 1.618);
+
+            --spacing-section-sm: calc(var(--spacing-section) / 1.618);
+            --spacing-section: calc(var(--ft-space-value) * 2.666);
+            --spacing-section-lg: calc(var(--spacing-section) * 1.618);
+
+            --text-xs: calc(var(--text-sm) / var(--ft-text-scale));
+            --text-sm: calc(var(--text-base) / var(--ft-text-scale));
+            --text-base: calc(var(--ft-text-value) * var(--ft-text-factor));
+            --text-lg: calc(var(--text-base) * var(--ft-text-scale));
+            --text-xl: calc(var(--text-lg) * var(--ft-text-scale));
+            --text-2xl: calc(var(--text-xl) * var(--ft-text-scale));
+            --text-3xl: calc(var(--text-2xl) * var(--ft-text-scale));
+            --text-4xl: calc(var(--text-3xl) * var(--ft-text-scale));
+            --text-5xl: calc(var(--text-4xl) * var(--ft-text-scale));
+            --text-6xl: calc(var(--text-5xl) * var(--ft-text-scale));
+            --text-7xl: calc(var(--text-6xl) * var(--ft-text-scale));
+            --text-8xl: calc(var(--text-7xl) * var(--ft-text-scale));
+            --text-9xl: calc(var(--text-8xl) * var(--ft-text-scale));
+            --text-10xl: calc(var(--text-9xl) * var(--ft-text-scale));
+
+            --radius-button: 0.25rem;
+            --radius-card: 0.5rem;
+            --radius-section: 1rem;
+
+            --aspect-rrss: 1.91 / 1;
+            --aspect-wide: 18 / 9;
+            --aspect-ultrawide: 18 / 5;
+            --aspect-golden: 1.6180 / 1;
+            --aspect-portrait: 3 / 4;
+            --aspect-landscape: 4 / 3;
+        }
+
+        /* Estilos adicionales sin envolver en capas */
+        .btn {
+            @apply px-4 py-2 rounded-md font-semibold transition-all duration-200;
+        }
+        .btn-primary {
+            @apply bg-primary-600 text-white hover:bg-primary-700;
+        }
+        .btn-secondary {
+            @apply bg-secondary-600 text-white hover:bg-secondary-700;
+        }
+        .btn-xs {
+            @apply px-3 py-1 text-sm;
+        }
+        .card {
+            @apply p-6 rounded-card bg-white shadow-sm;
+        }
+        .card-outline {
+            @apply border border-secondary-200 bg-secondary-50;
+        }
+        .heading {
+            @apply text-4xl font-bold mb-4 text-primary-900;
+        }
+        .subheading {
+            @apply text-xl font-semibold mb-2 text-primary-800;
+        }
+        .subheading-sm {
+            @apply text-lg font-semibold mb-2 text-secondary-900;
+        }
+        .display-sm {
+            @apply text-5xl font-bold leading-tight text-primary-900;
+        }
+        .text-large {
+            @apply text-lg text-primary-600;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-white">
+    <main id="brx-content"><section id="brxe-wpnysh" class="brxe-div"><div id="brxe-ekuzna" class="brxe-div flex justify-between items-center "><div id="brxe-fdwxkg" class="brxe-div"><svg class="brxe-svg w-30 " id="brxe-qcqexo" width="100" height="51" viewBox="0 0 100 51" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M2.58517 29.5165H5.41809V43.4072H2.58517V29.5165Z" class="cneutral" fill="#394149"></path> <path d="M7.06117 38.6479C7.0593 37.6502 7.35345 36.6743 7.9064 35.8438C8.45935 35.0133 9.24624 34.3655 10.1675 33.9824C11.0887 33.5993 12.1029 33.4981 13.0817 33.6916C14.0605 33.8851 14.9599 34.3646 15.666 35.0695C16.3722 35.7743 16.8534 36.6728 17.0487 37.6512C17.2441 38.6296 17.1448 39.644 16.7634 40.566C16.382 41.4879 15.7357 42.276 14.9062 42.8305C14.0768 43.3851 13.1015 43.681 12.1038 43.681C11.4402 43.6886 10.7819 43.5637 10.1673 43.3135C9.55272 43.0634 8.99423 42.6931 8.52459 42.2243C8.05495 41.7556 7.6836 41.1978 7.43231 40.5836C7.18102 39.9695 7.05484 39.3114 7.06117 38.6479ZM14.2945 38.6479C14.2834 38.2172 14.1455 37.7993 13.8981 37.4466C13.6507 37.0938 13.3048 36.8219 12.9036 36.6647C12.5024 36.5075 12.0638 36.4722 11.6427 36.563C11.2215 36.6538 10.8365 36.8668 10.5357 37.1753C10.235 37.4838 10.0319 37.8742 9.95184 38.2976C9.87179 38.7209 9.91837 39.1585 10.0857 39.5555C10.2531 39.9525 10.5338 40.2914 10.8927 40.5297C11.2517 40.768 11.6729 40.8952 12.1038 40.8953C12.3985 40.9036 12.6918 40.8507 12.9651 40.7399C13.2384 40.6291 13.4858 40.4629 13.6917 40.2517C13.8975 40.0405 14.0574 39.789 14.1611 39.513C14.2649 39.2369 14.3103 38.9424 14.2945 38.6479Z" class="cneutral" fill="#394149"></path> <path d="M28.5346 33.8886V42.935C28.5346 46.1362 26.0322 47.4866 23.5015 47.4866C22.6116 47.5528 21.7206 47.3728 20.9261 46.9664C20.1316 46.56 19.4643 45.9428 18.9972 45.1825L21.4335 43.7755C21.6268 44.1651 21.9327 44.4878 22.3115 44.7016C22.6903 44.9154 23.1246 45.0106 23.5582 44.9747C23.8434 45.0223 24.1358 45.0037 24.4128 44.9203C24.6898 44.837 24.9439 44.6912 25.1556 44.4941C25.3672 44.297 25.5308 44.0539 25.6337 43.7836C25.7366 43.5133 25.776 43.223 25.7489 42.935V42.0568C25.4159 42.4666 24.9909 42.7921 24.5086 43.007C24.0263 43.2219 23.5001 43.3202 22.9727 43.2939C21.6904 43.2939 20.4607 42.7845 19.5539 41.8778C18.6472 40.9711 18.1378 39.7413 18.1378 38.459C18.1378 37.1767 18.6472 35.947 19.5539 35.0403C20.4607 34.1336 21.6904 33.6242 22.9727 33.6242C23.4998 33.6001 24.0252 33.6994 24.5072 33.9141C24.9892 34.1289 25.4144 34.4532 25.7489 34.8612V33.9169L28.5346 33.8886ZM25.7489 38.459C25.7678 37.9998 25.6488 37.5454 25.4074 37.1542C25.1659 36.7631 24.813 36.4531 24.394 36.2642C23.975 36.0752 23.509 36.0159 23.056 36.0939C22.603 36.1718 22.1837 36.3835 21.852 36.7016C21.5202 37.0198 21.2912 37.4299 21.1944 37.8792C21.0975 38.3285 21.1373 38.7966 21.3086 39.2231C21.4799 39.6497 21.7748 40.0152 22.1555 40.2728C22.5362 40.5305 22.9852 40.6683 23.4448 40.6687C23.7449 40.6899 24.046 40.6481 24.3288 40.5458C24.6117 40.4435 24.87 40.2832 25.0871 40.075C25.3041 39.8668 25.4752 39.6154 25.5892 39.3371C25.7032 39.0588 25.7576 38.7597 25.7489 38.459Z" class="cneutral" fill="#394149"></path> <path d="M30.1683 38.6479C30.1664 37.6502 30.4606 36.6743 31.0135 35.8438C31.5665 35.0133 32.3534 34.3655 33.2746 33.9824C34.1958 33.5993 35.21 33.4981 36.1888 33.6916C37.1676 33.8851 38.067 34.3646 38.7732 35.0695C39.4793 35.7743 39.9605 36.6728 40.1559 37.6512C40.3512 38.6296 40.2519 39.644 39.8705 40.566C39.4891 41.4879 38.8428 42.276 38.0134 42.8305C37.1839 43.3851 36.2086 43.681 35.2109 43.681C34.5474 43.6886 33.889 43.5637 33.2744 43.3135C32.6598 43.0634 32.1013 42.6931 31.6317 42.2243C31.1621 41.7556 30.7907 41.1978 30.5394 40.5836C30.2881 39.9695 30.1619 39.3114 30.1683 38.6479ZM37.4017 38.6479C37.3905 38.2172 37.2526 37.7993 37.0052 37.4466C36.7578 37.0938 36.4119 36.8219 36.0107 36.6647C35.6096 36.5075 35.171 36.4722 34.7498 36.563C34.3286 36.6538 33.9436 36.8668 33.6428 37.1753C33.3421 37.4838 33.139 37.8742 33.0589 38.2976C32.9789 38.7209 33.0255 39.1585 33.1928 39.5555C33.3602 39.9525 33.6409 40.2914 33.9998 40.5297C34.3588 40.768 34.78 40.8952 35.2109 40.8953C35.5041 40.9009 35.7953 40.8461 36.0664 40.7341C36.3374 40.6221 36.5825 40.4555 36.7863 40.2446C36.9901 40.0338 37.1482 39.7831 37.2509 39.5084C37.3535 39.2337 37.3984 38.9407 37.3828 38.6479H37.4017Z" class="cneutral" fill="#394149"></path> <path d="M41.5661 31.339C41.5661 30.9991 41.6669 30.6668 41.8557 30.3842C42.0446 30.1016 42.313 29.8813 42.627 29.7512C42.9411 29.6211 43.2866 29.5871 43.62 29.6534C43.9534 29.7197 44.2596 29.8834 44.5 30.1237C44.7404 30.3641 44.904 30.6703 44.9703 31.0037C45.0367 31.3371 45.0026 31.6827 44.8726 31.9967C44.7425 32.3107 44.5222 32.5792 44.2396 32.768C43.9569 32.9568 43.6247 33.0576 43.2847 33.0576C42.8297 33.0552 42.394 32.8733 42.0722 32.5515C41.7504 32.2298 41.5686 31.7941 41.5661 31.339ZM41.8588 33.8886H44.6917V43.4072H41.8588V33.8886Z" class="cneutral" fill="#394149"></path> <path d="M57.0431 38.6479C57.0774 39.2771 56.987 39.9069 56.777 40.501C56.5669 41.0951 56.2415 41.6418 55.8193 42.1096C55.3971 42.5774 54.8866 42.9571 54.3171 43.2268C53.7476 43.4965 53.1304 43.6509 52.501 43.6811C51.9726 43.7064 51.445 43.6156 50.9556 43.4149C50.4661 43.2142 50.0266 42.9086 49.6681 42.5196V47.2411H46.8352V33.8886H49.6681V34.7857C50.0266 34.3967 50.4661 34.0911 50.9556 33.8904C51.445 33.6897 51.9726 33.5989 52.501 33.6242C53.1296 33.6544 53.746 33.8085 54.3148 34.0776C54.8837 34.3468 55.3938 34.7256 55.8158 35.1924C56.2379 35.6592 56.5635 36.2047 56.7741 36.7977C56.9848 37.3907 57.0762 38.0195 57.0431 38.6479ZM54.2102 38.6479C54.199 38.2047 54.058 37.7745 53.8047 37.4106C53.5514 37.0468 53.197 36.7651 52.7853 36.6007C52.3736 36.4362 51.9226 36.3961 51.4884 36.4854C51.0541 36.5746 50.6555 36.7893 50.342 37.1028C50.0285 37.4163 49.8139 37.8148 49.7246 38.2491C49.6354 38.6834 49.6755 39.1343 49.8399 39.546C50.0044 39.9577 50.286 40.3122 50.6499 40.5654C51.0138 40.8187 51.444 40.9597 51.8872 40.9709C52.1965 40.9906 52.5064 40.9438 52.7962 40.8338C53.0859 40.7237 53.3487 40.5529 53.567 40.3329C53.7852 40.1128 53.9539 39.8486 54.0616 39.558C54.1692 39.2674 54.2135 38.9571 54.1913 38.6479H54.2102Z" class="cneutral" fill="#394149"></path> <path d="M65.863 40.5554C65.863 42.7462 63.9744 43.681 61.8969 43.681C61.067 43.7545 60.2341 43.5779 59.5054 43.174C58.7768 42.7701 58.1856 42.1574 57.8081 41.4147L60.2822 40.0077C60.3826 40.3512 60.5976 40.65 60.8913 40.8544C61.1851 41.0588 61.5399 41.1566 61.8969 41.1314C62.5863 41.1314 62.9262 40.9142 62.9262 40.5365C62.9262 39.4883 58.2047 40.0455 58.2047 36.7593C58.2047 34.6818 59.9611 33.6336 61.9819 33.6336C62.7276 33.611 63.4658 33.7881 64.12 34.1468C64.7742 34.5054 65.3205 35.0325 65.7025 35.6733L63.219 36.9765C63.1093 36.7271 62.9295 36.5149 62.7015 36.3657C62.4735 36.2165 62.2072 36.1367 61.9347 36.136C61.4437 36.136 61.1415 36.3249 61.1415 36.6743C61.1793 37.7602 65.863 37.0331 65.863 40.5554Z" class="cneutral" fill="#394149"></path> <path d="M76.2881 33.8886V43.4072H73.4551V42.5196C73.1256 42.914 72.7074 43.2248 72.2347 43.4267C71.7621 43.6286 71.2483 43.7157 70.7355 43.6811C68.8469 43.6811 67.1755 42.3118 67.1755 39.7339V33.8886H70.0084V39.3184C69.9835 39.5498 70.0105 39.7838 70.0873 40.0035C70.1641 40.2232 70.2888 40.423 70.4525 40.5885C70.6161 40.754 70.8146 40.8809 71.0334 40.9601C71.2522 41.0394 71.486 41.0688 71.7176 41.0465C72.7564 41.0465 73.4835 40.4421 73.4835 39.0918V33.8886H76.2881Z" class="cneutral" fill="#394149"></path> <path d="M92.6623 37.5713V43.4071H89.8293V37.8169C89.8293 36.8726 89.3666 36.2493 88.4601 36.2493C87.5536 36.2493 86.9681 36.9198 86.9681 38.0435V43.4071H84.1352V37.8169C84.1352 36.8726 83.6819 36.2493 82.7659 36.2493C81.85 36.2493 81.2834 36.9198 81.2834 38.0435V43.4071H78.4505V33.8886H81.2834V34.7668C81.5795 34.3789 81.9678 34.0712 82.4131 33.8717C82.8584 33.6721 83.3465 33.587 83.833 33.6242C84.3216 33.6004 84.8081 33.7037 85.2449 33.9237C85.6818 34.1438 86.0542 34.4733 86.326 34.8801C86.642 34.4548 87.0607 34.1165 87.5429 33.8969C88.0251 33.6773 88.5551 33.5834 89.0833 33.6242C91.2364 33.6242 92.6623 35.1917 92.6623 37.5713Z" class="cneutral" fill="#394149"></path> <path d="M95.0798 33.832C96.248 33.832 97.195 32.8849 97.195 31.7167C97.195 30.5485 96.248 29.6015 95.0798 29.6015C93.9116 29.6015 92.9645 30.5485 92.9645 31.7167C92.9645 32.8849 93.9116 33.832 95.0798 33.832Z" class="cneutral" fill="#394149"></path> <path d="M34.6443 22.3115C40.1151 22.3115 44.55 17.8765 44.55 12.4057C44.55 6.93493 40.1151 2.49997 34.6443 2.49997C29.1735 2.49997 24.7385 6.93493 24.7385 12.4057C24.7385 17.8765 29.1735 22.3115 34.6443 22.3115Z" class="ccompli1" fill="#394149"></path> <path d="M56.7882 22.3115C62.259 22.3115 66.6939 17.8765 66.6939 12.4057C66.6939 6.93493 62.259 2.49997 56.7882 2.49997C51.3174 2.49997 46.8824 6.93493 46.8824 12.4057C46.8824 17.8765 51.3174 22.3115 56.7882 22.3115Z" class="ccompli2" fill="#394149"></path> <path d="M22.4061 2.49997H2.60406V22.302H22.4061V2.49997Z" class="ccustom" fill="#394149"></path> </svg></div><div id="brxe-hxevzj" class="brxe-div flex gap-content-lg text-small font-semibold "><div id="brxe-grnntt" class="brxe-text-basic">Home</div><div id="brxe-lcwjrk" class="brxe-text-basic">Features</div><div id="brxe-cjsjws" class="brxe-text-basic">Pricing</div><div id="brxe-rlzbnx" class="brxe-text-basic">Abou Us</div><div id="brxe-stmkqv" class="brxe-text-basic">Contact</div></div><div id="brxe-sbvvju" class="brxe-div max-w-fit flex gap-content-md "><div id="brxe-mcxdyk" class="brxe-div btn btn-primary btn-xs"><div id="brxe-rgqrvm" class="brxe-text-basic">Sign Up</div></div><div id="brxe-nngepu" class="brxe-div btn btn-secondary btn-xs"><div id="brxe-aevzbt" class="brxe-text-basic">Login</div></div></div></div></section><section id="brxe-houvoh" class="brxe-div"><div id="brxe-odzscl" class="brxe-div grid md:grid-cols-2 gap-section "><div id="brxe-dgmrwc" class="brxe-div flex flex-col gap-content justify-center py-content-lg"><h1 id="brxe-soixjd" class="brxe-text-basic display-sm">Your digital transformation begins here</h1><div id="brxe-rlhjpb" class="brxe-text-basic text-large">Unlock the full potential of your business. Start your journey today and experience the future of business software.</div><div id="brxe-czkluo" class="brxe-div flex gap-content"><div id="brxe-hltlci" class="brxe-div btn btn-primary"><div id="brxe-tuupil" class="brxe-text-basic">Explore features</div></div><div id="brxe-iuftzb" class="brxe-div btn btn-secondary"><div id="brxe-ulcrsn" class="brxe-text-basic">Get started</div></div></div></div><div id="brxe-rqtfsz" class="brxe-div overflow-hidden rounded-card shadow-md"><img class="brxe-image w-full h-full object-cover" id="brxe-kogipl" src="https://picsum.photos/id/870/600/400?grayscale&amp;blur=2" alt=""></div></div></section><section id="brxe-pbcpxh" class="brxe-div"><div id="brxe-rknqed" class="brxe-div flex flex-col gap-content"><h2 id="brxe-pihkrh" class="brxe-text-basic heading text-center">SaaS solutions that drive results</h2><div id="brxe-eujyqg" class="brxe-text-basic text-large font-semibold text-center">Explore our suite of powerful software solutions.</div><div id="brxe-xwxqrf" class="brxe-div grid md:grid-cols-3 gap-columns mt-block-lg "><div id="brxe-fxhwng" class="brxe-div card card-outline"><h3 id="brxe-vbucim" class="brxe-text-basic subheading-sm">Enterprise planning</h3><div id="brxe-uygzaf" class="brxe-text-basic">Seamlessly manage and integrate all core business functions to optimize efficiency and productivity.</div></div><div id="brxe-juhigv" class="brxe-div card card-outline"><h3 id="brxe-tbskkn" class="brxe-text-basic subheading-sm">Project management</h3><div id="brxe-auimjd" class="brxe-text-basic">Ensure project success by efficiently planning, executing, and tracking your initiatives with our project management software.
+    
+    </div></div><div id="brxe-rmoskr" class="brxe-div card card-outline"><h3 id="brxe-aqbova" class="brxe-text-basic subheading-sm">Analytics and reporting</h3><div id="brxe-sqxvwe" class="brxe-text-basic">Leverage data-driven insights to make informed decisions and stay ahead of the competition.</div></div></div></div></section><section id="brxe-cmetrg" class="brxe-div"><div id="brxe-yfzfyx" class="brxe-div grid md:grid-cols-2 gap-section "><div id="brxe-hqyrbw" class="brxe-div flex flex-col gap-content justify-center py-content-lg"><h1 id="brxe-xyxnxb" class="brxe-text-basic heading">Customization and integration</h1><div id="brxe-sjtaax" class="brxe-text-basic text-large">Our SaaS solutions are flexible and can be tailored to your specific business requirements. We understand that each organization is unique, and we are committed to delivering software that fits your needs like a glove.</div><div id="brxe-dblpff" class="brxe-div flex gap-content"><div id="brxe-cblnyi" class="brxe-div btn btn-primary"><div id="brxe-sppbrm" class="brxe-text-basic">Learn More</div></div></div></div><div id="brxe-izsyzj" class="brxe-div overflow-hidden rounded-card shadow-md"><img class="brxe-image w-full h-full object-cover" id="brxe-dqwmtw" src="https://picsum.photos/id/42/600/400?grayscale&amp;blur=2" alt=""></div></div></section><section id="brxe-kroojp" class="brxe-div"><div id="brxe-ocghoh" class="brxe-div grid md:grid-cols-2 gap-section "><div id="brxe-yjqdfr" class="brxe-div flex flex-col gap-content justify-center py-content-lg order-last"><h1 id="brxe-ovvukj" class="brxe-text-basic heading">Customization and integration</h1><div id="brxe-mecxsg" class="brxe-text-basic text-large">Our SaaS solutions are flexible and can be tailored to your specific business requirements. We understand that each organization is unique, and we are committed to delivering software that fits your needs like a glove.</div><div id="brxe-ippxfc" class="brxe-div flex gap-content"><div id="brxe-vskkgk" class="brxe-div btn btn-primary"><div id="brxe-kyaxrs" class="brxe-text-basic">Learn More</div></div></div></div><div id="brxe-xtxwib" class="brxe-div overflow-hidden rounded-card shadow-md"><img class="brxe-image w-full h-full object-cover" id="brxe-xdbxbc" src="https://picsum.photos/id/250/600/400?grayscale&amp;blur=2" alt=""></div></div></section><section id="brxe-qupgwv" class="brxe-div"><div id="brxe-bmhizr" class="brxe-div flex flex-col gap-content"><h2 id="brxe-lisagr" class="brxe-text-basic heading text-center">Discover what sets Zephtor apart</h2><div id="brxe-ubpigb" class="brxe-text-basic text-large font-semibold text-center">Our suite of SaaS solutions is packed with powerful features.</div><div id="brxe-alfxcp" class="brxe-div grid md:grid-cols-3 gap-columns mt-block-lg "><div id="brxe-jfcjnd" class="brxe-div flex flex-col gap-content"><h3 id="brxe-oxmdsx" class="brxe-text-basic subheading-sm">Enterprise planning</h3><div id="brxe-uyiuci" class="brxe-text-basic leading-tight">Integrate Zephtor seamlessly with your existing systems and processes, ensuring a smooth transition to our software.</div></div><div id="brxe-hlcqio" class="brxe-div flex flex-col gap-content"><h3 id="brxe-pnudjl" class="brxe-text-basic subheading-sm">Project management</h3><div id="brxe-chfpml" class="brxe-text-basic leading-tight">Our intuitive user interface ensures your team can hit the ground running with minimal training, increasing productivity.
+    </div></div><div id="brxe-schryr" class="brxe-div flex flex-col gap-content"><h3 id="brxe-jlvdbc" class="brxe-text-basic subheading-sm">Analytics and reporting</h3><div id="brxe-agvago" class="brxe-text-basic leading-tight">Gain access to real-time data and analytics, enabling you to make informed decisions and stay ahead of the curve.</div></div><div id="brxe-ggghcx" class="brxe-div flex flex-col gap-content"><h3 id="brxe-rffgzd" class="brxe-text-basic subheading-sm">Mobile accessibility</h3><div id="brxe-mbbtfw" class="brxe-text-basic leading-tight">Access your data and tools from anywhere with mobile compatibility, keeping your team connected on the go.</div></div><div id="brxe-cwqpgf" class="brxe-div flex flex-col gap-content"><h3 id="brxe-wqbvps" class="brxe-text-basic subheading-sm">Customization options</h3><div id="brxe-bxzwhp" class="brxe-text-basic leading-tight">Tailor Zephtor to your unique business needs with extensive customization options for a personalized experience.</div></div><div id="brxe-csffoy" class="brxe-div flex flex-col gap-content"><h3 id="brxe-ibvdeb" class="brxe-text-basic subheading-sm">Scalability</h3><div id="brxe-ryxyvc" class="brxe-text-basic leading-tight">Whether you're a small startup or a large enterprise, our solutions scale with your business as it grows.</div></div></div></div></section><section id="brxe-brnfay" class="brxe-div bg-gray-100 "><div id="brxe-mmxtnp" class="brxe-div flex justify-between pt-columns gap-columns "><div id="brxe-ygpupw" class="brxe-div"><svg class="brxe-svg w-30 " id="brxe-cbhios" width="100" height="51" viewBox="0 0 100 51" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M2.58517 29.5165H5.41809V43.4072H2.58517V29.5165Z" class="cneutral" fill="#394149"></path> <path d="M7.06117 38.6479C7.0593 37.6502 7.35345 36.6743 7.9064 35.8438C8.45935 35.0133 9.24624 34.3655 10.1675 33.9824C11.0887 33.5993 12.1029 33.4981 13.0817 33.6916C14.0605 33.8851 14.9599 34.3646 15.666 35.0695C16.3722 35.7743 16.8534 36.6728 17.0487 37.6512C17.2441 38.6296 17.1448 39.644 16.7634 40.566C16.382 41.4879 15.7357 42.276 14.9062 42.8305C14.0768 43.3851 13.1015 43.681 12.1038 43.681C11.4402 43.6886 10.7819 43.5637 10.1673 43.3135C9.55272 43.0634 8.99423 42.6931 8.52459 42.2243C8.05495 41.7556 7.6836 41.1978 7.43231 40.5836C7.18102 39.9695 7.05484 39.3114 7.06117 38.6479ZM14.2945 38.6479C14.2834 38.2172 14.1455 37.7993 13.8981 37.4466C13.6507 37.0938 13.3048 36.8219 12.9036 36.6647C12.5024 36.5075 12.0638 36.4722 11.6427 36.563C11.2215 36.6538 10.8365 36.8668 10.5357 37.1753C10.235 37.4838 10.0319 37.8742 9.95184 38.2976C9.87179 38.7209 9.91837 39.1585 10.0857 39.5555C10.2531 39.9525 10.5338 40.2914 10.8927 40.5297C11.2517 40.768 11.6729 40.8952 12.1038 40.8953C12.3985 40.9036 12.6918 40.8507 12.9651 40.7399C13.2384 40.6291 13.4858 40.4629 13.6917 40.2517C13.8975 40.0405 14.0574 39.789 14.1611 39.513C14.2649 39.2369 14.3103 38.9424 14.2945 38.6479Z" class="cneutral" fill="#394149"></path> <path d="M28.5346 33.8886V42.935C28.5346 46.1362 26.0322 47.4866 23.5015 47.4866C22.6116 47.5528 21.7206 47.3728 20.9261 46.9664C20.1316 46.56 19.4643 45.9428 18.9972 45.1825L21.4335 43.7755C21.6268 44.1651 21.9327 44.4878 22.3115 44.7016C22.6903 44.9154 23.1246 45.0106 23.5582 44.9747C23.8434 45.0223 24.1358 45.0037 24.4128 44.9203C24.6898 44.837 24.9439 44.6912 25.1556 44.4941C25.3672 44.297 25.5308 44.0539 25.6337 43.7836C25.7366 43.5133 25.776 43.223 25.7489 42.935V42.0568C25.4159 42.4666 24.9909 42.7921 24.5086 43.007C24.0263 43.2219 23.5001 43.3202 22.9727 43.2939C21.6904 43.2939 20.4607 42.7845 19.5539 41.8778C18.6472 40.9711 18.1378 39.7413 18.1378 38.459C18.1378 37.1767 18.6472 35.947 19.5539 35.0403C20.4607 34.1336 21.6904 33.6242 22.9727 33.6242C23.4998 33.6001 24.0252 33.6994 24.5072 33.9141C24.9892 34.1289 25.4144 34.4532 25.7489 34.8612V33.9169L28.5346 33.8886ZM25.7489 38.459C25.7678 37.9998 25.6488 37.5454 25.4074 37.1542C25.1659 36.7631 24.813 36.4531 24.394 36.2642C23.975 36.0752 23.509 36.0159 23.056 36.0939C22.603 36.1718 22.1837 36.3835 21.852 36.7016C21.5202 37.0198 21.2912 37.4299 21.1944 37.8792C21.0975 38.3285 21.1373 38.7966 21.3086 39.2231C21.4799 39.6497 21.7748 40.0152 22.1555 40.2728C22.5362 40.5305 22.9852 40.6683 23.4448 40.6687C23.7449 40.6899 24.046 40.6481 24.3288 40.5458C24.6117 40.4435 24.87 40.2832 25.0871 40.075C25.3041 39.8668 25.4752 39.6154 25.5892 39.3371C25.7032 39.0588 25.7576 38.7597 25.7489 38.459Z" class="cneutral" fill="#394149"></path> <path d="M30.1683 38.6479C30.1664 37.6502 30.4606 36.6743 31.0135 35.8438C31.5665 35.0133 32.3534 34.3655 33.2746 33.9824C34.1958 33.5993 35.21 33.4981 36.1888 33.6916C37.1676 33.8851 38.067 34.3646 38.7732 35.0695C39.4793 35.7743 39.9605 36.6728 40.1559 37.6512C40.3512 38.6296 40.2519 39.644 39.8705 40.566C39.4891 41.4879 38.8428 42.276 38.0134 42.8305C37.1839 43.3851 36.2086 43.681 35.2109 43.681C34.5474 43.6886 33.889 43.5637 33.2744 43.3135C32.6598 43.0634 32.1013 42.6931 31.6317 42.2243C31.1621 41.7556 30.7907 41.1978 30.5394 40.5836C30.2881 39.9695 30.1619 39.3114 30.1683 38.6479ZM37.4017 38.6479C37.3905 38.2172 37.2526 37.7993 37.0052 37.4466C36.7578 37.0938 36.4119 36.8219 36.0107 36.6647C35.6096 36.5075 35.171 36.4722 34.7498 36.563C34.3286 36.6538 33.9436 36.8668 33.6428 37.1753C33.3421 37.4838 33.139 37.8742 33.0589 38.2976C32.9789 38.7209 33.0255 39.1585 33.1928 39.5555C33.3602 39.9525 33.6409 40.2914 33.9998 40.5297C34.3588 40.768 34.78 40.8952 35.2109 40.8953C35.5041 40.9009 35.7953 40.8461 36.0664 40.7341C36.3374 40.6221 36.5825 40.4555 36.7863 40.2446C36.9901 40.0338 37.1482 39.7831 37.2509 39.5084C37.3535 39.2337 37.3984 38.9407 37.3828 38.6479H37.4017Z" class="cneutral" fill="#394149"></path> <path d="M41.5661 31.339C41.5661 30.9991 41.6669 30.6668 41.8557 30.3842C42.0446 30.1016 42.313 29.8813 42.627 29.7512C42.9411 29.6211 43.2866 29.5871 43.62 29.6534C43.9534 29.7197 44.2596 29.8834 44.5 30.1237C44.7404 30.3641 44.904 30.6703 44.9703 31.0037C45.0367 31.3371 45.0026 31.6827 44.8726 31.9967C44.7425 32.3107 44.5222 32.5792 44.2396 32.768C43.9569 32.9568 43.6247 33.0576 43.2847 33.0576C42.8297 33.0552 42.394 32.8733 42.0722 32.5515C41.7504 32.2298 41.5686 31.7941 41.5661 31.339ZM41.8588 33.8886H44.6917V43.4072H41.8588V33.8886Z" class="cneutral" fill="#394149"></path> <path d="M57.0431 38.6479C57.0774 39.2771 56.987 39.9069 56.777 40.501C56.5669 41.0951 56.2415 41.6418 55.8193 42.1096C55.3971 42.5774 54.8866 42.9571 54.3171 43.2268C53.7476 43.4965 53.1304 43.6509 52.501 43.6811C51.9726 43.7064 51.445 43.6156 50.9556 43.4149C50.4661 43.2142 50.0266 42.9086 49.6681 42.5196V47.2411H46.8352V33.8886H49.6681V34.7857C50.0266 34.3967 50.4661 34.0911 50.9556 33.8904C51.445 33.6897 51.9726 33.5989 52.501 33.6242C53.1296 33.6544 53.746 33.8085 54.3148 34.0776C54.8837 34.3468 55.3938 34.7256 55.8158 35.1924C56.2379 35.6592 56.5635 36.2047 56.7741 36.7977C56.9848 37.3907 57.0762 38.0195 57.0431 38.6479ZM54.2102 38.6479C54.199 38.2047 54.058 37.7745 53.8047 37.4106C53.5514 37.0468 53.197 36.7651 52.7853 36.6007C52.3736 36.4362 51.9226 36.3961 51.4884 36.4854C51.0541 36.5746 50.6555 36.7893 50.342 37.1028C50.0285 37.4163 49.8139 37.8148 49.7246 38.2491C49.6354 38.6834 49.6755 39.1343 49.8399 39.546C50.0044 39.9577 50.286 40.3122 50.6499 40.5654C51.0138 40.8187 51.444 40.9597 51.8872 40.9709C52.1965 40.9906 52.5064 40.9438 52.7962 40.8338C53.0859 40.7237 53.3487 40.5529 53.567 40.3329C53.7852 40.1128 53.9539 39.8486 54.0616 39.558C54.1692 39.2674 54.2135 38.9571 54.1913 38.6479H54.2102Z" class="cneutral" fill="#394149"></path> <path d="M65.863 40.5554C65.863 42.7462 63.9744 43.681 61.8969 43.681C61.067 43.7545 60.2341 43.5779 59.5054 43.174C58.7768 42.7701 58.1856 42.1574 57.8081 41.4147L60.2822 40.0077C60.3826 40.3512 60.5976 40.65 60.8913 40.8544C61.1851 41.0588 61.5399 41.1566 61.8969 41.1314C62.5863 41.1314 62.9262 40.9142 62.9262 40.5365C62.9262 39.4883 58.2047 40.0455 58.2047 36.7593C58.2047 34.6818 59.9611 33.6336 61.9819 33.6336C62.7276 33.611 63.4658 33.7881 64.12 34.1468C64.7742 34.5054 65.3205 35.0325 65.7025 35.6733L63.219 36.9765C63.1093 36.7271 62.9295 36.5149 62.7015 36.3657C62.4735 36.2165 62.2072 36.1367 61.9347 36.136C61.4437 36.136 61.1415 36.3249 61.1415 36.6743C61.1793 37.7602 65.863 37.0331 65.863 40.5554Z" class="cneutral" fill="#394149"></path> <path d="M76.2881 33.8886V43.4072H73.4551V42.5196C73.1256 42.914 72.7074 43.2248 72.2347 43.4267C71.7621 43.6286 71.2483 43.7157 70.7355 43.6811C68.8469 43.6811 67.1755 42.3118 67.1755 39.7339V33.8886H70.0084V39.3184C69.9835 39.5498 70.0105 39.7838 70.0873 40.0035C70.1641 40.2232 70.2888 40.423 70.4525 40.5885C70.6161 40.754 70.8146 40.8809 71.0334 40.9601C71.2522 41.0394 71.486 41.0688 71.7176 41.0465C72.7564 41.0465 73.4835 40.4421 73.4835 39.0918V33.8886H76.2881Z" class="cneutral" fill="#394149"></path> <path d="M92.6623 37.5713V43.4071H89.8293V37.8169C89.8293 36.8726 89.3666 36.2493 88.4601 36.2493C87.5536 36.2493 86.9681 36.9198 86.9681 38.0435V43.4071H84.1352V37.8169C84.1352 36.8726 83.6819 36.2493 82.7659 36.2493C81.85 36.2493 81.2834 36.9198 81.2834 38.0435V43.4071H78.4505V33.8886H81.2834V34.7668C81.5795 34.3789 81.9678 34.0712 82.4131 33.8717C82.8584 33.6721 83.3465 33.587 83.833 33.6242C84.3216 33.6004 84.8081 33.7037 85.2449 33.9237C85.6818 34.1438 86.0542 34.4733 86.326 34.8801C86.642 34.4548 87.0607 34.1165 87.5429 33.8969C88.0251 33.6773 88.5551 33.5834 89.0833 33.6242C91.2364 33.6242 92.6623 35.1917 92.6623 37.5713Z" class="cneutral" fill="#394149"></path> <path d="M95.0798 33.832C96.248 33.832 97.195 32.8849 97.195 31.7167C97.195 30.5485 96.248 29.6015 95.0798 29.6015C93.9116 29.6015 92.9645 30.5485 92.9645 31.7167C92.9645 32.8849 93.9116 33.832 95.0798 33.832Z" class="cneutral" fill="#394149"></path> <path d="M34.6443 22.3115C40.1151 22.3115 44.55 17.8765 44.55 12.4057C44.55 6.93493 40.1151 2.49997 34.6443 2.49997C29.1735 2.49997 24.7385 6.93493 24.7385 12.4057C24.7385 17.8765 29.1735 22.3115 34.6443 22.3115Z" class="ccompli1" fill="#394149"></path> <path d="M56.7882 22.3115C62.259 22.3115 66.6939 17.8765 66.6939 12.4057C66.6939 6.93493 62.259 2.49997 56.7882 2.49997C51.3174 2.49997 46.8824 6.93493 46.8824 12.4057C46.8824 17.8765 51.3174 22.3115 56.7882 22.3115Z" class="ccompli2" fill="#394149"></path> <path d="M22.4061 2.49997H2.60406V22.302H22.4061V2.49997Z" class="ccustom" fill="#394149"></path> </svg><div id="brxe-itwyky" class="brxe-text-basic text-small font-bold">Your digital transformation partner.</div></div><div id="brxe-qhezun" class="brxe-div max-w-2xl max-w-fit flex gap-section-lg "><div id="brxe-aduytq" class="brxe-div flex flex-col gap-content-6 "><div id="brxe-gliumw" class="brxe-text-basic font-bold">Quick Links</div><div id="brxe-hxbntz" class="brxe-div flex flex-col gap-content-2 "><div id="brxe-bvayro" class="brxe-text-basic text-small">Home</div><div id="brxe-jwpxyu" class="brxe-text-basic text-small">Features</div><div id="brxe-qtkaba" class="brxe-text-basic text-small">Pricing</div><div id="brxe-taycxd" class="brxe-text-basic text-small">About Us</div><div id="brxe-bptewm" class="brxe-text-basic text-small">Contact Us</div></div></div><div id="brxe-vwovie" class="brxe-div flex flex-col gap-content-6 "><div id="brxe-suazcp" class="brxe-text-basic font-bold">Legal</div><div id="brxe-kcdwme" class="brxe-div flex flex-col gap-content-2 "><div id="brxe-jhnyjl" class="brxe-text-basic text-small">Privacy policy</div><div id="brxe-knzvfz" class="brxe-text-basic text-small">Terms of service</div><div id="brxe-cvgkhq" class="brxe-text-basic text-small">Cookie policy</div></div></div><div id="brxe-fbklwl" class="brxe-div flex flex-col gap-content-6 "><div id="brxe-aihoyf" class="brxe-text-basic font-bold">Stay Connected</div><div id="brxe-vnjdhm" class="brxe-div flex flex-col gap-content-2 "><div id="brxe-hjwnkc" class="brxe-text-basic text-small">Linkedin</div><div id="brxe-ffojjn" class="brxe-text-basic text-small">Facebook</div><div id="brxe-lzfvuc" class="brxe-text-basic text-small">Instagram</div></div></div></div></div></section></main>
+</body>
+</html> 

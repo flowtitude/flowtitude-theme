@@ -1,0 +1,31 @@
+{
+    "development": {
+        "name": "flowtitude-v2",
+        "paths": {
+            "source": ".",
+            "staging": "/Users/ajjulian/Sites/dev-flowtitude-theme/wp-content/themes/flowtitude-v2",
+            "production": "/Users/ajjulian/Sites/dev-tw4/wp-content/themes/flowtitude-v2"
+        },
+        "sync": {
+            "directories": [
+                "inc",
+                "admin-panel",
+                "snippets",
+                "bricks"
+            ],
+            "files": [
+                "functions.php",
+                "flowtitude-v2.php",
+                "style.css",
+                "theme.json"
+            ],
+            "exclude": [
+                ".git",
+                ".DS_Store",
+                "node_modules",
+                "backups",
+                "dev-tools"
+            ]
+        }
+    }
+} 

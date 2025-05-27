@@ -1,0 +1,18 @@
+/*
+Theme Name: Flowtitude v2
+Theme URI: https://flowtitude.com
+Description: Tema hijo para Bricks Builder y WooCommerce con TailwindCSS.
+Author: Angel Julian
+Version: 2.0.0
+Template: bricks
+License: GPL2
+
+----------------------------------------------
+Convenciones de estilos:
+- Utiliza preferentemente utilidades de TailwindCSS para estilos nuevos.
+- Añade reglas personalizadas solo si es imprescindible.
+- Organiza los estilos personalizados en archivos separados dentro de /admin-panel o /inc si aplica.
+- Evita definir estilos globales que puedan afectar a plugins o al core de WordPress.
+- Para personalizaciones de WooCommerce, usa la carpeta /woocommerce.
+----------------------------------------------
+*/
