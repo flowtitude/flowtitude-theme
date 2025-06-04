@@ -128,11 +128,13 @@ function flowtitude_admin_scripts($hook) {
 	);
 
 	// Estilos del admin
+	$admin_css_path = get_stylesheet_directory() . '/admin-panel/css/admin.css';
+	$admin_css_ver  = file_exists($admin_css_path) ? filemtime($admin_css_path) : FLOWTITUDE_VERSION;
 	wp_enqueue_style(
 		'flowtitude-admin-styles',
 		FLOWTITUDE_URL . '/admin-panel/css/admin.css',
 		[],
-		filemtime(get_template_directory() . '/admin-panel/css/admin.css')
+		$admin_css_ver
 	);
 
 	// Localizar script con datos necesarios

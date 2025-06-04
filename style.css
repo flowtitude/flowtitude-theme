@@ -9,7 +9,6 @@ License: GPL2
 
 ----------------------------------------------
 Convenciones de estilos:
-- Utiliza preferentemente utilidades de TailwindCSS para estilos nuevos.
 - Añade reglas personalizadas solo si es imprescindible.
 - Organiza los estilos personalizados en archivos separados dentro de /admin-panel o /inc si aplica.
 - Evita definir estilos globales que puedan afectar a plugins o al core de WordPress.

@@ -303,6 +303,7 @@ input:checked + .slider:before {
     align-items: center;
     justify-content: center;
     margin-left: auto; /* Align arrow icon to the right */
+    color: white; /* Establecer el color de los iconos a blanco */
 }
 
 .toggle-section[open] .arrow-icon {
@@ -515,7 +516,7 @@ select.small {
     font-size: 15px;
     font-weight: 700;
     display: block;
-    margin-bottom: 0.25rem:
+    margin-bottom: 0.25rem;
 }
 /* Botones */
 .btn,

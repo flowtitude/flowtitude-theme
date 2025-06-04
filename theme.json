@@ -4,12 +4,7 @@
   "settings": {
 	"custom": {
 	  "flowtitude": {
-		"designSystem": true,
-		"tailwind": {
-		  "enabled": true,
-		  "mode": "jit",
-		  "darkMode": "class"
-		}
+		"designSystem": true
 	  }
 	},
 	"color": {

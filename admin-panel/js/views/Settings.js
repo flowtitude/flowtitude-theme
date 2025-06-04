@@ -41,8 +41,7 @@ window.Settings = {
 
 			const result = await res.json();
 			if (result.success) {
-				this.message = "✅ Ajustes guardados correctamente.";
-				setTimeout(() => this.message = '', 3000);
+				window.FlowtitudeNotify.show("Ajustes guardados correctamente.", 'success');
 			}
 
 			this.isSaving = false;
@@ -67,9 +66,6 @@ window.Settings = {
 				<details class="toggle-section snippet-group" open>
 					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 						<span>General</span>
-						<svg class="arrow-icon" viewBox="0 0 20 20" fill="currentColor">
-							<path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
-						</svg>
 					</summary>
 
 					<div class="snippet-item">
@@ -98,9 +94,6 @@ window.Settings = {
 				<details class="toggle-section snippet-group">
 					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 						<span>CSS y rendimiento</span>
-						<svg class="arrow-icon" viewBox="0 0 20 20" fill="currentColor">
-							<path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
-						</svg>
 					</summary>
 
 					<div class="snippet-item">
@@ -164,9 +157,6 @@ window.Settings = {
 				<details class="toggle-section snippet-group">
 					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 						<span>Integraciones</span>
-						<svg class="arrow-icon" viewBox="0 0 20 20" fill="currentColor">
-							<path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
-						</svg>
 					</summary>
 
 					<div class="snippet-item">
@@ -193,7 +183,7 @@ window.Settings = {
 					</div>
 				</details>
 
-				<p v-if="message" class="notice-popup show">{{ message }}</p>
+				<p v-if="message" class="notice-popup show" :style="{ color: 'white' }">{{ message }}</p>
 			</div>
 		</div>
 	`
