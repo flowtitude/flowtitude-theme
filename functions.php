@@ -25,26 +25,6 @@ if (file_exists(__DIR__ . '/flowtitude-v2.php')) {
 	flowtitude_debug_log('Archivo esencial flowtitude-v2.php no encontrado', 'warning');
 }
 
-// Cargar los handlers de AJAX
-if (file_exists(__DIR__ . '/admin-panel/includes/ajax-handlers.php')) {
-	require_once __DIR__ . '/admin-panel/includes/ajax-handlers.php';
-	// NOTA: Revisar seguridad de los handlers AJAX y validar permisos/capacidades correctamente.
-} else {
-	flowtitude_debug_log('Archivo esencial admin-panel/includes/ajax-handlers.php no encontrado', 'warning');
-}
-
-// Cargar la inicialización del panel de administración
-if (file_exists(__DIR__ . '/admin-panel/includes/init.php')) {
-	require_once __DIR__ . '/admin-panel/includes/init.php';
-} else {
-	flowtitude_debug_log('Archivo esencial admin-panel/includes/init.php no encontrado', 'warning');
-}
-
-// Asegurar que la función is_plugin_active está disponible
-if (!function_exists('is_plugin_active')) {
-	include_once(ABSPATH . 'wp-admin/includes/plugin.php');
-}
-
 // Cargar el manejador de demos
 if (file_exists(__DIR__ . '/inc/features/demo-handler.php')) {
 	require_once __DIR__ . '/inc/features/demo-handler.php';
@@ -100,15 +80,9 @@ function flowtitude_admin_scripts($hook) {
 
 	// Utilidades
 	wp_enqueue_script('flowtitude-error-handler', FLOWTITUDE_URL . '/admin-panel/js/utils/error-handler.js', [], FLOWTITUDE_VERSION, true);
-	wp_enqueue_script('flowtitude-color-utils', FLOWTITUDE_URL . '/admin-panel/js/utils/colorUtils.js', [], FLOWTITUDE_VERSION, true);
 
 	// Componentes
-	$components = [
-		'color-panel' => ['ColorPanel', ['vue', 'flowtitude-color-utils']],
-		'typography-panel' => ['TypographyPanel', ['vue']],
-		'spacing-panel' => ['SpacingPanel', ['vue']],
-		'layout-panel' => ['LayoutPanel', ['vue']]
-	];
+	$components = [];
 
 	foreach ($components as $handle => $config) {
 		$name = $config[0];
@@ -130,7 +104,6 @@ function flowtitude_admin_scripts($hook) {
 		'upload-snippet' => 'UploadSnippet',
 		'upload-bricks' => 'UploadBricks',
 		'upload' => 'Upload',
-		'design-settings' => 'DesignSettings',
 		'security' => 'Security',
 		'bricks' => 'Bricks'
 	];
@@ -173,8 +146,6 @@ function flowtitude_admin_scripts($hook) {
 		'rest_nonce' => wp_create_nonce('wp_rest'),
 		'icon_url' => FLOWTITUDE_URL . '/admin-panel/assets/icon.png',
 		'theme_url' => FLOWTITUDE_URL,
-		'windpress_active' => flowtitude_is_windpress_active(),
-		'integrate_tailwind' => !empty(get_option('flowtitude_settings', [])['integrate_tailwind']),
 		'rest_url' => rest_url('flowtitude/v1'),
 		'ajaxurl' => admin_url('admin-ajax.php')
 	]);

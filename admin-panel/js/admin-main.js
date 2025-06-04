@@ -8,46 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
 		{ path: "/security", component: window.Security },
 		{ path: "/settings", component: window.Settings },
 		{ path: '/bricks', component: window.Bricks },
-		{ path: "/upload", component: window.Upload },
-		{ 
-			path: "/design", 
-			component: window.FlowtitudeSettings,
-			children: [
-				{
-					path: "",
-					name: "design",
-					component: window.DesignSettings,
-					props: (route) => ({ 
-						activeSection: route.query.section || 'colors',
-						demo: route.query.demo || null
-					})
-				},
-				{
-					path: "colors",
-					name: "design-colors",
-					component: window.DesignSettings,
-					props: { activeSection: 'colors' }
-				},
-				{
-					path: "typography",
-					name: "design-typography",
-					component: window.DesignSettings,
-					props: { activeSection: 'typography' }
-				},
-				{
-					path: "spacing",
-					name: "design-spacing",
-					component: window.DesignSettings,
-					props: { activeSection: 'spacing' }
-				},
-				{
-					path: "layout",
-					name: "design-layout",
-					component: window.DesignSettings,
-					props: { activeSection: 'layout' }
-				}
-			]
-		}
+		{ path: "/upload", component: window.Upload }
 	];
 
 	const router = createRouter({
@@ -67,9 +28,6 @@ document.addEventListener("DOMContentLoaded", function () {
 						<li><router-link to="/settings">Settings</router-link></li>
 						<li><router-link to="/bricks">Bricks</router-link></li>
 						<li><router-link to="/upload">Uploads</router-link></li>
-						<li v-if="showTailwind">
-							<router-link to="/design">Tailwind</router-link>
-						</li>
 					</ul>
 				</nav>
 
@@ -167,10 +125,6 @@ document.addEventListener("DOMContentLoaded", function () {
 	app.component('DesignSettings', window.DesignSettings);
 	
 	// Registrar componentes
-	app.component('ColorPanel', window.ColorPanel);
-	app.component('TypographyPanel', window.TypographyPanel);
-	app.component('SpacingPanel', window.SpacingPanel);
-	app.component('LayoutPanel', window.LayoutPanel);
 	
 	app.use(router);
 	app.mount('#flowtitude-admin-app');
