@@ -77,6 +77,13 @@ add_action('rest_api_init', function () {
 		'callback' => 'flowtitude_upload_bricks_component',
 		'permission_callback' => fn() => current_user_can('manage_options')
 	]);
+
+	// Endpoint para eliminar componentes Bricks (alias legacy)
+	register_rest_route('flowtitude/v1', '/bricks/delete', [
+		'methods'  => 'POST',
+		'callback' => 'flowtitude_delete_bricks_component',
+		'permission_callback' => fn() => current_user_can('manage_options'),
+	]);
 });
 
 
@@ -93,36 +100,22 @@ function flowtitude_get_settings() {
 
 	// Valores por defecto para características específicas
 	$default_features = [
-		'windpress_active' => false,
-		'tailwind_status' => [
-			'has_main_css' => false,
-			'has_theme_css' => false,
-			'has_import' => false
-		],
-		'dark_mode_enabled' => false,
-		'intersect_enabled' => false,
-		'active_snippets_count' => 0,
-		'active_bricks_count' => 0,
-		'bricks_layer' => false,
-		'wp_layer' => false,
-		'tailwind_integration' => false
+		'dark_mode_enabled'      => false,
+		'intersect_enabled'      => false,
+		'active_snippets_count'  => 0,
+		'active_bricks_count'    => 0,
+		'bricks_layer'           => false,
+		'wp_layer'               => false
 	];
 
 	// Combinar con valores guardados
 	$features = [
-		'windpress_active' => false,
-		'tailwind_status' => [
-			'has_main_css' => false,
-			'has_theme_css' => false,
-			'has_import' => false
-		],
-		'dark_mode_enabled' => isset($stored['enable_dark_mode']) ? (bool)$stored['enable_dark_mode'] : $default_features['dark_mode_enabled'],
-		'intersect_enabled' => isset($stored['intersection_observer']) ? (bool)$stored['intersection_observer'] : $default_features['intersect_enabled'],
-		'active_snippets_count' => 0,
-		'active_bricks_count' => 0,
-		'bricks_layer' => isset($stored['bricks_layer']) ? (bool)$stored['bricks_layer'] : $default_features['bricks_layer'],
-		'wp_layer' => isset($stored['wp_layer']) ? (bool)$stored['wp_layer'] : $default_features['wp_layer'],
-		'tailwind_integration' => isset($stored['tailwind_integration']) ? (bool)$stored['tailwind_integration'] : $default_features['tailwind_integration']
+		'dark_mode_enabled'      => isset($stored['enable_dark_mode']) ? (bool) $stored['enable_dark_mode']       : $default_features['dark_mode_enabled'],
+		'intersect_enabled'      => isset($stored['intersection_observer']) ? (bool) $stored['intersection_observer'] : $default_features['intersect_enabled'],
+		'active_snippets_count'  => 0,
+		'active_bricks_count'    => 0,
+		'bricks_layer'           => isset($stored['bricks_layer']) ? (bool) $stored['bricks_layer'] : $default_features['bricks_layer'],
+		'wp_layer'               => isset($stored['wp_layer']) ? (bool) $stored['wp_layer']         : $default_features['wp_layer']
 	];
 
 	// Debug para verificar los valores guardados
@@ -158,8 +151,7 @@ function flowtitude_save_settings($request) {
 		'bricks_layer'             => isset($params['bricks_layer']) ? !empty($params['bricks_layer']) : ($current['bricks_layer'] ?? false),
 		'wp_layer'                 => isset($params['wp_layer']) ? !empty($params['wp_layer']) : ($current['wp_layer'] ?? false),
 		'intersection_observer'    => isset($params['intersection_observer']) ? !empty($params['intersection_observer']) : ($current['intersection_observer'] ?? false),
-		'enable_dark_mode'         => isset($params['enable_dark_mode']) ? !empty($params['enable_dark_mode']) : ($current['enable_dark_mode'] ?? false),
-		'tailwind_integration'     => isset($params['tailwind_integration']) ? !empty($params['tailwind_integration']) : ($current['tailwind_integration'] ?? false)
+		'enable_dark_mode'         => isset($params['enable_dark_mode']) ? !empty($params['enable_dark_mode']) : ($current['enable_dark_mode'] ?? false)
 	];
  
 	// Guardar las preferencias
@@ -407,28 +399,34 @@ function flowtitude_list_snippet_files() {
  * @return WP_REST_Response
  */
 function flowtitude_move_snippet_file($request) {
-	$src = sanitize_text_field($request['src']);
-	$dst = sanitize_text_field($request['dst']);
-	$src = basename($src); // Evita path traversal
-	$dst = basename($dst);
-	$src_path = flowtitude_get_snippet_path($src);
-	$dst_path = flowtitude_get_snippet_path($dst);
-	if (!file_exists($src_path)) {
-		flowtitude_debug_log("Intento de mover archivo inexistente: $src_path", 'warning');
-		return new WP_Error('not_found', 'El archivo de origen no existe', ['status' => 404]);
+	$src_input = $request->get_param('src');
+	if(empty($src_input)){
+		$json = $request->get_json_params();
+		$src_input = $json['file'] ?? '';
 	}
-	if (!is_dir(dirname($dst_path))) {
-		if (!mkdir(dirname($dst_path), 0755, true)) {
-			flowtitude_debug_log("No se pudo crear el directorio destino: $dst_path", 'warning');
-			return new WP_Error('mkdir_failed', 'No se pudo crear el directorio destino', ['status' => 500]);
-		}
+	$src_rel = flowtitude_clean_relative_path($src_input);
+	$dst_input = $request->get_param('dst');
+	if(empty($dst_input)){
+		$json = $json ?? $request->get_json_params();
+		$dst_input = $json['to'] ?? '';
 	}
-	if (!rename($src_path, $dst_path)) {
-		flowtitude_debug_log("Error al mover $src_path a $dst_path", 'warning');
-		return new WP_Error('move_failed', 'No se pudo mover el archivo', ['status' => 500]);
+	$dst_rel = flowtitude_clean_relative_path($dst_input);
+	if(!$src_rel || !$dst_rel) return new WP_Error('bad_path','Ruta no válida',['status'=>400]);
+	// Si solo viene la carpeta, añade el mismo nombre de archivo del origen
+	if($dst_rel && strpos($dst_rel,'/')===false){
+		$dst_rel = rtrim($dst_rel,'/').'/'.basename($src_rel);
 	}
-	flowtitude_debug_log("Archivo movido de $src_path a $dst_path", 'success');
-	return rest_ensure_response(['success' => true]);
+	$src_path = flowtitude_get_snippet_path($src_rel);
+	$dst_path = flowtitude_get_snippet_path($dst_rel,false,false);
+	flowtitude_debug_log("Move src_path: $src_path",'info');
+	flowtitude_debug_log("Move dst_path: $dst_path",'info');
+	if(!$src_path || !file_exists($src_path)) return new WP_Error('not_found','Origen no existe',['status'=>404]);
+	$dir_ok = flowtitude_ensure_dir(dirname($dst_path));
+	if(is_wp_error($dir_ok)) return $dir_ok;
+	if(file_exists($dst_path)) return new WP_Error('exists','Ya hay un archivo con ese nombre',['status'=>409]);
+	if(!rename($src_path,$dst_path)) return new WP_Error('move_failed','No se pudo mover el archivo',['status'=>500]);
+	flowtitude_debug_log("Snippet movido: $src_rel → $dst_rel",'success');
+	return rest_ensure_response(['success'=>true]);
 }
 
 /**
@@ -438,19 +436,18 @@ function flowtitude_move_snippet_file($request) {
  * @return WP_REST_Response
  */
 function flowtitude_delete_snippet_file($request) {
-	$file = sanitize_text_field($request['file']);
-	$file = basename($file);
-	$path = flowtitude_get_snippet_path($file);
-	if (!file_exists($path)) {
-		flowtitude_debug_log("Intento de eliminar archivo inexistente: $path", 'warning');
-		return new WP_Error('not_found', 'El archivo no existe', ['status' => 404]);
+	$file_input = $request->get_param('file');
+	if($file_input===null){
+		$json = $request->get_json_params();
+		$file_input = $json['file'] ?? '';
 	}
-	if (!unlink($path)) {
-		flowtitude_debug_log("No se pudo eliminar el archivo: $path", 'warning');
-		return new WP_Error('delete_failed', 'No se pudo eliminar el archivo', ['status' => 500]);
-	}
-	flowtitude_debug_log("Archivo eliminado: $path", 'success');
-	return rest_ensure_response(['success' => true]);
+	$rel = flowtitude_clean_relative_path($file_input);
+	if(!$rel) return new WP_Error('bad_path','Ruta no válida',['status'=>400]);
+	$path = flowtitude_get_snippet_path($rel);
+	if(!$path || !file_exists($path)) return new WP_Error('not_found','El archivo no existe',['status'=>404]);
+	if(!unlink($path)) return new WP_Error('delete_failed','No se pudo eliminar el archivo',['status'=>500]);
+	flowtitude_debug_log("Snippet eliminado: $rel",'success');
+	return rest_ensure_response(['success'=>true]);
 }
 
 
@@ -458,27 +455,54 @@ function flowtitude_delete_snippet_file($request) {
  * === UPLOAD DE SNIPPETS ===
  */
 /**
- * Sube y guarda un archivo de snippet, validando nombre y extensión.
- *
- * @param WP_REST_Request $request
- * @return WP_REST_Response
+ * Garantiza que un directorio exista y sea escribible.
  */
+function flowtitude_ensure_dir($path){
+    if (file_exists($path)) {
+        if (!is_writable($path) && !@chmod($path, 0755)) {
+            return new WP_Error('dir_not_writable', "El directorio $path no es escribible.");
+        }
+        return true;
+    }
+    if (!wp_mkdir_p($path)) {
+        return new WP_Error('mkdir_failed', "No se pudo crear el directorio $path.");
+    }
+    return true;
+}
+
+/**
+ * Devuelve la ruta absoluta a un snippet con control de seguridad.
+ *
+ * @param string  $file        Nombre o ruta relativa.
+ * @param bool    $is_system   TRUE ⇒ carpeta del tema; FALSE ⇒ carpeta de uploads.
+ * @param bool    $must_exist  TRUE ⇒ el archivo debe existir, FALSE ⇒ solo construye la ruta.
+ */
+function flowtitude_get_snippet_path($file, $is_system = false, $must_exist = true) {
+	$base = $is_system ? flowtitude_get_system_dir('snippets') : flowtitude_get_custom_dir('snippets');
+	$relative = flowtitude_clean_relative_path($file);
+	if(!$relative) return false;
+	$full = trailingslashit($base).$relative;
+	if(strpos(wp_normalize_path($full), wp_normalize_path($base)) !== 0) return false;
+	return ($must_exist && !file_exists($full)) ? false : $full;
+}
+
 function flowtitude_upload_snippet($request) {
-	$uploaded_file = $request->get_file_params()['file'] ?? null;
-	if (!$uploaded_file) {
-		return new WP_Error('no_file', 'No se recibió archivo', ['status' => 400]);
-	}
-	$filename = sanitize_file_name($uploaded_file['name']);
-	if (pathinfo($filename, PATHINFO_EXTENSION) !== 'php') {
-		return new WP_Error('invalid_ext', 'Solo se permiten archivos .php', ['status' => 400]);
-	}
-	$dest_path = flowtitude_get_snippet_path($filename);
-	if (!move_uploaded_file($uploaded_file['tmp_name'], $dest_path)) {
-		flowtitude_debug_log("No se pudo subir el archivo: $filename", 'warning');
-		return new WP_Error('upload_failed', 'No se pudo subir el archivo', ['status' => 500]);
-	}
-	flowtitude_debug_log("Snippet subido: $filename", 'success');
-	return rest_ensure_response(['success' => true]);
+	$f = $request->get_file_params()['file'] ?? null;
+	if(!$f) return new WP_Error('no_file','No se recibió archivo',['status'=>400]);
+	$filename = preg_replace('/[^A-Za-z0-9\-_\.]/','',$f['name']);
+	if(strtolower(pathinfo($filename,PATHINFO_EXTENSION))!=='php')
+		return new WP_Error('invalid_ext','Solo .php',['status'=>400]);
+	$folder = trim($request->get_param('folder') ?? '');
+	if($folder==='' || $folder==='/' || $folder==='.') $folder='custom';
+	$folder = preg_replace('/[^A-Za-z0-9\-_]/','',$folder);
+	$relative = ($folder ? $folder.'/' : '').$filename;
+	$dest = flowtitude_get_snippet_path($relative,false,false);
+	if(!$dest) return new WP_Error('bad_path','Ruta destino inválida',['status'=>400]);
+	if(is_wp_error($e = flowtitude_ensure_dir(dirname($dest)))) return $e;
+	if(!move_uploaded_file($f['tmp_name'],$dest))
+		return new WP_Error('upload_failed','move_uploaded_file falló',['status'=>500]);
+	flowtitude_debug_log("Snippet subido a $relative",'success');
+	return rest_ensure_response(['success'=>true]);
 }
 
 /**
@@ -671,11 +695,6 @@ function flowtitude_get_system_dir($type = 'snippets') {
     return get_stylesheet_directory() . '/' . $type;
 }
 
-function flowtitude_get_snippet_path($file, $is_system = false) {
-    $base_dir = $is_system ? flowtitude_get_system_dir('snippets') : flowtitude_get_custom_dir('snippets');
-    return realpath($base_dir . '/' . $file);
-}
-
 function flowtitude_get_bricks_path($file) {
     return realpath(flowtitude_get_custom_dir('bricks') . '/' . $file);
 }
@@ -711,5 +730,28 @@ function flowtitude_load_snippets() {
 			}
 		}
 	}
+}
+
+// Helper: limpia ruta relativa manteniendo jerarquía y extensión .php
+function flowtitude_clean_relative_path($path){
+	$path = str_replace('\\','/',$path);
+	$path = preg_replace('#/+#','/', ltrim($path,'/'));
+	if (preg_match('#(^|/)\.+(/|$)#',$path)) return false;
+	$segments = explode('/', $path);
+	$file = array_pop($segments);
+	$file = preg_replace('/[^A-Za-z0-9\-_\.]/','',$file);
+	$segments[] = $file;
+	return implode('/', array_filter($segments,'strlen')); 
+}
+
+// Eliminación de componentes Bricks
+function flowtitude_delete_bricks_component($request){
+	$file_rel = flowtitude_clean_relative_path($request->get_param('file') ?? '');
+	if(!$file_rel) return new WP_Error('invalid_file','Archivo no especificado',['status'=>400]);
+	$path = flowtitude_get_custom_dir('bricks').'/'.$file_rel;
+	if(!file_exists($path)) return new WP_Error('not_found','No existe',['status'=>404]);
+	if(!unlink($path)) return new WP_Error('delete_failed','No se pudo eliminar',['status'=>500]);
+	flowtitude_debug_log("Componente Bricks eliminado: $file_rel",'success');
+	return rest_ensure_response(['success'=>true]);
 }
 
