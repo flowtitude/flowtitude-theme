@@ -83,19 +83,8 @@ add_action('rest_api_init', function () {
 		'permission_callback' => fn() => current_user_can('manage_options'),
 	]);
 	
-	// Security
-	register_rest_route('flowtitude/v1', '/security', [
-		'methods'  => 'GET',
-		'callback' => fn() => get_option('flowtitude_security_settings', []),
-		'permission_callback' => fn() => current_user_can('edit_theme_options'),
-	]);
-	
-	register_rest_route('flowtitude/v1', '/security', [
-		'methods'  => 'POST',
-		'callback' => 'flowtitude_save_security_settings',
-		'permission_callback' => fn() => current_user_can('manage_options'),
-	]);
-	
+	// (El registro de /security se define al final del archivo para incluir defaults adecuadamente)
+
 	register_rest_route('flowtitude/v1', '/upload-bricks-component', [
 		'methods'  => 'POST',
 		'callback' => 'flowtitude_upload_bricks_component',

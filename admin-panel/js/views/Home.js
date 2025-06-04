@@ -79,6 +79,38 @@ window.Home = {
 					</p>
 				</div>
 
+				<!-- Seguridad -->
+				<div class="info-box">
+					<h3>Seguridad</h3>
+					<p class="info-value">
+						<span>API REST (visitantes)</span>
+						<span :class="security.disable_wp_api ? 'badge badge-success' : 'badge badge-danger'">
+							{{ security.disable_wp_api ? 'SI' : 'NO' }}
+						</span>
+					</p>
+					<hr>
+					<p class="info-value">
+						<span>Ocultar versión WP</span>
+						<span :class="security.hide_wp_version ? 'badge badge-success' : 'badge badge-danger'">
+							{{ security.hide_wp_version ? 'SI' : 'NO' }}
+						</span>
+					</p>
+					<hr>
+					<p class="info-value">
+						<span>Desactivar XML-RPC</span>
+						<span :class="security.disable_xmlrpc ? 'badge badge-success' : 'badge badge-danger'">
+							{{ security.disable_xmlrpc ? 'SI' : 'NO' }}
+						</span>
+					</p>
+					<hr>
+					<p class="info-value">
+						<span>Login seguro</span>
+						<span :class="security.secure_login ? 'badge badge-success' : 'badge badge-danger'">
+							{{ security.secure_login ? 'SI' : 'NO' }}
+						</span>
+					</p>
+				</div>
+
 				<!-- Capas CSS -->
 				<div class="info-box">
 					<h3>Capas CSS</h3>
@@ -93,17 +125,6 @@ window.Home = {
 						<span>WordPress</span>
 						<span :class="settings.wp_layer ? 'badge badge-success' : 'badge badge-danger'">
 							{{ settings.wp_layer ? 'SI' : 'NO' }}
-						</span>
-					</p>
-				</div>
-
-				<!-- Seguridad -->
-				<div class="info-box">
-					<h3>Seguridad</h3>
-					<p class="info-value">
-						<span>Deshabilitar API REST</span>
-						<span :class="security.disable_wp_api ? 'badge badge-success' : 'badge badge-danger'">
-							{{ security.disable_wp_api ? 'SI' : 'NO' }}
 						</span>
 					</p>
 				</div>
