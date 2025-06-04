@@ -25,12 +25,6 @@ if (file_exists(__DIR__ . '/flowtitude-v2.php')) {
 	flowtitude_debug_log('Archivo esencial flowtitude-v2.php no encontrado', 'warning');
 }
 
-// Cargar el manejador de demos
-if (file_exists(__DIR__ . '/inc/features/demo-handler.php')) {
-	require_once __DIR__ . '/inc/features/demo-handler.php';
-} else {
-	flowtitude_debug_log('Archivo esencial inc/features/demo-handler.php no encontrado', 'warning');
-}
 /**
  * Comprueba si el plugin WindPress está activo en alguna de sus rutas posibles.
  *
