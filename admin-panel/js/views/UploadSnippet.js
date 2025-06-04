@@ -151,7 +151,7 @@ window.UploadSnippet = {
 
 		async uploadSnippet() {
 			if (!this.snippetFile) {
-				this.showNotice("Selecciona un archivo", false);
+				this.showNotice("Selecciona un archivo", 'error');
 				return;
 			}
 
@@ -168,11 +168,11 @@ window.UploadSnippet = {
 					body: formData
 				});
 				const result = await res.json();
-				this.showNotice(result.message || 'Snippet subido correctamente', true);
+				this.showNotice(result.message || 'Snippet subido correctamente', 'success');
 				this.snippetFile = null;
 				this.loadSnippets();
 			} catch (e) {
-				this.showNotice("Error al subir", false);
+				this.showNotice("Error al subir", 'error');
 			}
 
 			this.uploading = false;
@@ -195,13 +195,13 @@ window.UploadSnippet = {
 
 				if (result.success) {
 					snippet.folder = newFolder;
-					this.showNotice('Snippet movido con éxito', true);
+					this.showNotice('Snippet movido con éxito', 'success');
 					this.loadSnippets();
 				} else {
-					this.showNotice('Error al mover snippet', false);
+					this.showNotice('Error al mover snippet', 'error');
 				}
 			} catch (error) {
-				this.showNotice('Error al mover snippet', false);
+				this.showNotice('Error al mover snippet', 'error');
 			}
 		},
 
@@ -219,16 +219,16 @@ window.UploadSnippet = {
 				});
 				const result = await res.json();
 				if (result.success) {
-					this.showNotice("Snippet eliminado correctamente", true);
+					this.showNotice("Snippet eliminado correctamente", 'success');
 					this.loadSnippets();
 				}
 			} catch (error) {
-				this.showNotice("Error al eliminar el snippet", false);
+				this.showNotice("Error al eliminar el snippet", 'error');
 			}
 		},
 
-		showNotice(msg, isSuccess = true) {
-			window.FlowtitudeNotify.show(msg, isSuccess ? 'success' : 'error');
+		showNotice(msg, type = 'info') {
+			window.FlowtitudeNotify.show(msg, type);
 		}
 	},
 	template: `

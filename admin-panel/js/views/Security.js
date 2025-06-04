@@ -36,17 +36,17 @@ window.Security = {
 
 				const result = await response.json();
 				if (result.success) {
-					this.showNotice('Cambios guardados correctamente', true);
+					this.showNotice('Cambios guardados correctamente', 'success');
 				}
 			} catch (error) {
 				console.error('Error al guardar:', error);
-				this.showNotice(error.message, false);
+				this.showNotice(error.message, 'error');
 				// Revertir el cambio si hay error
 				this.settings.disable_wp_api = !this.settings.disable_wp_api;
 			}
 		},
-		showNotice(msg, isSuccess = true) {
-			window.FlowtitudeNotify.show(msg, isSuccess ? 'success' : 'error');
+		showNotice(msg, type = 'info') {
+			window.FlowtitudeNotify.show(msg, type);
 		}
 	},
 	template: `

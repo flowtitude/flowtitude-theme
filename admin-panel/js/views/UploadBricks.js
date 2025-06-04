@@ -13,7 +13,7 @@ window.UploadBricks = {
 
 		async uploadFile() {
 			if (!this.file) {
-				this.showNotice("Selecciona un archivo PHP", false);
+				this.showNotice("Selecciona un archivo PHP", 'error');
 				return;
 			}
 
@@ -34,21 +34,21 @@ window.UploadBricks = {
 				const result = await res.json();
 
 				if (result.success) {
-					this.showNotice('Componente subido correctamente', true);
+					this.showNotice('Componente subido correctamente', 'success');
 					this.file = null;
 					this.$refs.fileInput.value = '';
 				} else {
-					this.showNotice(result.message || 'No se pudo subir el componente', false);
+					this.showNotice(result.message || 'No se pudo subir el componente', 'error');
 				}
 			} catch (error) {
-				this.showNotice('Error al subir el componente', false);
+				this.showNotice('Error al subir el componente', 'error');
 			}
 
 			this.isUploading = false;
 		},
 
-		showNotice(msg, isSuccess = true) {
-			window.FlowtitudeNotify.show(msg, isSuccess ? 'success' : 'error');
+		showNotice(msg, type = 'info') {
+			window.FlowtitudeNotify.show(msg, type);
 		}
 	},
 

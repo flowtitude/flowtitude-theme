@@ -61,10 +61,10 @@ window.Bricks = {
 				}
 				
 				this.active = newActive;
-				this.showNotice('Cambios guardados correctamente', true);
+				this.showNotice('Cambios guardados correctamente', 'success');
 			} catch (error) {
 				console.error('Error al guardar cambios:', error);
-				this.showNotice(error.message, false);
+				this.showNotice(error.message, 'error');
 			}
 		},
 		async handleComponentDelete(file) {
@@ -85,14 +85,14 @@ window.Bricks = {
 				}
 				
 				await this.loadComponents();
-				this.showNotice('Componente eliminado correctamente', true);
+				this.showNotice('Componente eliminado correctamente', 'success');
 			} catch (error) {
 				console.error('Error al eliminar componente:', error);
-				this.showNotice(error.message, false);
+				this.showNotice(error.message, 'error');
 			}
 		},
-		showNotice(msg, isSuccess = true) {
-			window.FlowtitudeNotify.show(msg, isSuccess ? 'success' : 'error');
+		showNotice(msg, type = 'info') {
+			window.FlowtitudeNotify.show(msg, type);
 		}
 	},
 	created() {

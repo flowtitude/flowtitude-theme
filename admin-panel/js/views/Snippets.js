@@ -43,7 +43,7 @@ window.Snippets = {
 
 		toggle(file) {
 			if (this.isSystemSnippet(file)) {
-				this.showNotice('Los snippets del sistema no se pueden desactivar', false);
+				this.showNotice('Los snippets del sistema no se pueden desactivar', 'error');
 				return;
 			}
 
@@ -73,16 +73,16 @@ window.Snippets = {
 					throw new Error('Error al guardar los snippets');
 				}
 
-				this.showNotice('Cambios guardados correctamente', true);
+				this.showNotice('Cambios guardados correctamente', 'success');
 			} catch (error) {
 				console.error('Error al guardar:', error);
-				this.showNotice(error.message, false);
+				this.showNotice(error.message, 'error');
 			}
 		},
 
 		async remove(file) {
 			if (this.isSystemSnippet(file)) {
-				this.showNotice('Los snippets del sistema no se pueden eliminar', false);
+				this.showNotice('Los snippets del sistema no se pueden eliminar', 'error');
 				return;
 			}
 
@@ -104,15 +104,15 @@ window.Snippets = {
 						this.snippets[key] = this.snippets[key].filter(s => s.file !== file);
 					}
 					this.activeSnippets = this.activeSnippets.filter(f => f !== file);
-					this.showNotice('Snippet eliminado correctamente', true);
+					this.showNotice('Snippet eliminado correctamente', 'success');
 				}
 			} catch (error) {
-				this.showNotice('Error al eliminar el snippet', false);
+				this.showNotice('Error al eliminar el snippet', 'error');
 			}
 		},
 
-		showNotice(msg, isSuccess = true) {
-			window.FlowtitudeNotify.show(msg, isSuccess ? 'success' : 'error');
+		showNotice(msg, type = 'info') {
+			window.FlowtitudeNotify.show(msg, type);
 		}
 	},
 
