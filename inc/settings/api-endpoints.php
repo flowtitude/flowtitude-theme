@@ -586,6 +586,9 @@ add_action('rest_api_init', function () {
 		'callback' => function () {
 			$defaults = [
 				'disable_wp_api' => false,
+				'hide_wp_version' => false,
+				'disable_xmlrpc' => false,
+				'secure_login' => false,
 			];
 			$stored = get_option('flowtitude_security_settings', []);
 			return rest_ensure_response(array_merge($defaults, (array) $stored));
@@ -603,7 +606,10 @@ add_action('rest_api_init', function () {
 
 			// Lista blanca de campos permitidos para guardar
 			$sanitized = [
-				'disable_wp_api' => !empty($params['disable_wp_api']),
+				'disable_wp_api'   => !empty($params['disable_wp_api']),
+				'hide_wp_version'  => !empty($params['hide_wp_version']),
+				'disable_xmlrpc'   => !empty($params['disable_xmlrpc']),
+				'secure_login'     => !empty($params['secure_login']),
 			];
 
 			update_option('flowtitude_security_settings', $sanitized);

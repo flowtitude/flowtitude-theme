@@ -23,8 +23,8 @@ document.addEventListener("DOMContentLoaded", function () {
 					<ul>
 						<li><img :src="icon" alt="Icon" style="height: 1.5rem; margin-right: 1.5rem; filter: invert(1);" /></li>
 						<li><router-link to="/">Home</router-link></li>
-						<li><router-link to="/snippets">Snippets</router-link></li>
 						<li><router-link to="/security">Security</router-link></li>
+						<li><router-link to="/snippets">Snippets</router-link></li>
 						<li><router-link to="/settings">Settings</router-link></li>
 						<li><router-link to="/bricks">Bricks</router-link></li>
 						<li><router-link to="/upload">Uploads</router-link></li>

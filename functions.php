@@ -107,7 +107,7 @@ function flowtitude_admin_scripts($hook) {
 		wp_enqueue_script(
 			"flowtitude-{$handle}-view",
 			FLOWTITUDE_URL . "/admin-panel/js/views/{$name}.js",
-			['vue'],
+			['vue','flowtitude-notify'],
 			FLOWTITUDE_VERSION,
 			true
 		);
@@ -115,7 +115,7 @@ function flowtitude_admin_scripts($hook) {
 
 	// Script principal
 	$dependencies = array_merge(
-		['vue', 'vue-router', 'flowtitude-error-handler'],
+		['vue', 'vue-router', 'flowtitude-error-handler','flowtitude-notify'],
 		array_map(function($handle) { return "flowtitude-{$handle}-component"; }, array_keys($components)),
 		array_map(function($handle) { return "flowtitude-{$handle}-view"; }, array_keys($views))
 	);
