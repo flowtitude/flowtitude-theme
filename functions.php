@@ -26,39 +26,6 @@ if (file_exists(__DIR__ . '/flowtitude-v2.php')) {
 }
 
 /**
- * Comprueba si el plugin WindPress está activo en alguna de sus rutas posibles.
- *
- * @return bool
- */
-// Función para verificar WindPress
-function flowtitude_is_windpress_active() {
-	if (!function_exists('is_plugin_active')) {
-		include_once(ABSPATH . 'wp-admin/includes/plugin.php');
-	}
-	
-	// Verificar múltiples posibles rutas
-	$possible_paths = [
-		'windpress/windpress.php',
-		'wind-press/windpress.php',
-		'wind-press/wind-press.php',
-		'windpress/wind-press.php'
-	];
-	
-	flowtitude_debug_log('Verificando WindPress en las siguientes rutas:', 'debug');
-	flowtitude_debug_log($possible_paths, 'debug');
-	
-	foreach ($possible_paths as $path) {
-		if (is_plugin_active($path)) {
-			flowtitude_debug_log("WindPress encontrado en: {$path}", 'success');
-			return true;
-		}
-	}
-	
-	flowtitude_debug_log('WindPress no encontrado en ninguna ruta', 'warning');
-	return false;
-}
-
-/**
  * Registra scripts y estilos para el panel de administración Flowtitude.
  *
  * @param string $hook

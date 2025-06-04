@@ -69,19 +69,6 @@ add_action('rest_api_init', function () {
 		'callback' => 'flowtitude_upload_snippet',
 		'permission_callback' => fn() => current_user_can('manage_options'),
 	]);
-
-	// Diseño visual
-	register_rest_route('flowtitude/v1', '/design-settings', [
-		'methods'  => 'GET',
-		'callback' => fn() => get_option('flowtitude_design_settings', []),
-		'permission_callback' => fn() => current_user_can('edit_theme_options'),
-	]);
-
-	register_rest_route('flowtitude/v1', '/design-settings', [
-		'methods'  => 'POST',
-		'callback' => 'flowtitude_save_design_settings',
-		'permission_callback' => fn() => current_user_can('manage_options'),
-	]);
 	
 	// (El registro de /security se define al final del archivo para incluir defaults adecuadamente)
 
@@ -104,56 +91,18 @@ function flowtitude_get_settings() {
 	$stored = get_option('flowtitude_settings', []);
 	$visual = get_option('flowtitude_design_settings', []);
 
-	// Detectar si WindPress está activo (siempre verificar, no depender de la opción guardada)
-	include_once ABSPATH . 'wp-admin/includes/plugin.php';
-	$windpress_active = is_plugin_active('windpress/windpress.php');
-	
-	// Verificar sistema de diseño y Tailwind 4
-	$tailwind_status = $windpress_active ? flowtitude_check_tailwind_system() : [
-		'has_main_css' => false,
-		'has_theme_css' => false,
-		'has_import' => false
-	];
-	
-	// Debug para verificar la detección de WindPress
-	error_log('WindPress active status: ' . ($windpress_active ? 'true' : 'false'));
-	error_log('WindPress plugin path: ' . WP_PLUGIN_DIR . '/windpress/windpress.php');
-	error_log('WindPress plugin exists: ' . (file_exists(WP_PLUGIN_DIR . '/windpress/windpress.php') ? 'true' : 'false'));
-
-	// Contar snippets personalizados activos
-	$active_snippets = get_option('flowtitude_active_snippets', []);
-	if (!is_array($active_snippets)) {
-		$active_snippets = [];
-	}
-	
-	$custom_dir = flowtitude_get_custom_dir('snippets');
-	$valid_active_snippets = array_filter($active_snippets, function($file) use ($custom_dir) {
-		$path = flowtitude_get_snippet_path($file, false);
-		return $path && file_exists($path) && strpos($path, $custom_dir) === 0;
-	});
-
-	// Contar componentes de Bricks activos
-	$bricks_dir = flowtitude_get_custom_dir('bricks');
-	$active_bricks = 0;
-	if (file_exists($bricks_dir)) {
-		$iterator = new RecursiveIteratorIterator(
-			new RecursiveDirectoryIterator($bricks_dir, FilesystemIterator::SKIP_DOTS)
-		);
-		foreach ($iterator as $file) {
-			if ($file->isFile() && $file->getExtension() === 'php') {
-				$active_bricks++;
-			}
-		}
-	}
-
 	// Valores por defecto para características específicas
 	$default_features = [
-		'windpress_active' => $windpress_active,
-		'tailwind_status' => $tailwind_status,
+		'windpress_active' => false,
+		'tailwind_status' => [
+			'has_main_css' => false,
+			'has_theme_css' => false,
+			'has_import' => false
+		],
 		'dark_mode_enabled' => false,
 		'intersect_enabled' => false,
-		'active_snippets_count' => count($valid_active_snippets),
-		'active_bricks_count' => $active_bricks,
+		'active_snippets_count' => 0,
+		'active_bricks_count' => 0,
 		'bricks_layer' => false,
 		'wp_layer' => false,
 		'tailwind_integration' => false
@@ -161,12 +110,16 @@ function flowtitude_get_settings() {
 
 	// Combinar con valores guardados
 	$features = [
-		'windpress_active' => $windpress_active, // Siempre usar el valor detectado
-		'tailwind_status' => $tailwind_status,
+		'windpress_active' => false,
+		'tailwind_status' => [
+			'has_main_css' => false,
+			'has_theme_css' => false,
+			'has_import' => false
+		],
 		'dark_mode_enabled' => isset($stored['enable_dark_mode']) ? (bool)$stored['enable_dark_mode'] : $default_features['dark_mode_enabled'],
 		'intersect_enabled' => isset($stored['intersection_observer']) ? (bool)$stored['intersection_observer'] : $default_features['intersect_enabled'],
-		'active_snippets_count' => count($valid_active_snippets),
-		'active_bricks_count' => $active_bricks,
+		'active_snippets_count' => 0,
+		'active_bricks_count' => 0,
 		'bricks_layer' => isset($stored['bricks_layer']) ? (bool)$stored['bricks_layer'] : $default_features['bricks_layer'],
 		'wp_layer' => isset($stored['wp_layer']) ? (bool)$stored['wp_layer'] : $default_features['wp_layer'],
 		'tailwind_integration' => isset($stored['tailwind_integration']) ? (bool)$stored['tailwind_integration'] : $default_features['tailwind_integration']
@@ -179,7 +132,7 @@ function flowtitude_get_settings() {
 
 	// Combinar todo y asegurar que todos los valores por defecto estén presentes
 	$merged = array_merge($defaults, $stored, $features);
-	$merged['tailwind_status'] = $tailwind_status; // Asegurar que siempre se incluye el estado actual
+	$merged['tailwind_status'] = $features['tailwind_status']; // Asegurar que siempre se incluye el estado actual
 
 	return rest_ensure_response($merged);
 }
@@ -758,39 +711,5 @@ function flowtitude_load_snippets() {
 			}
 		}
 	}
-}
-
-/**
- * Verifica si el sistema de diseño de Tailwind está correctamente configurado
- */
-function flowtitude_check_tailwind_system() {
-    $upload_dir = wp_upload_dir();
-    $windpress_dir = $upload_dir['basedir'] . '/windpress/data';
-    $main_css_path = $windpress_dir . '/main.css';
-    $theme_css_path = $windpress_dir . '/theme/flowtitude.css';
-    
-    $result = [
-        'has_main_css' => false,
-        'has_theme_css' => false,
-        'has_import' => false
-    ];
-    
-    // Verificar main.css
-    if (file_exists($main_css_path)) {
-        $result['has_main_css'] = true;
-        
-        // Verificar la línea de importación
-        $main_css_content = file_get_contents($main_css_path);
-        if (strpos($main_css_content, "@import './theme/flowtitude.css';") !== false) {
-            $result['has_import'] = true;
-        }
-    }
-    
-    // Verificar flowtitude.css
-    if (file_exists($theme_css_path)) {
-        $result['has_theme_css'] = true;
-    }
-    
-    return $result;
 }
 

@@ -17,7 +17,6 @@ function flowtitude_get_settings_defaults() {
 		
 		// Características
 		'enable_feature' => false,
-		'integrate_tailwind' => false,
 		
 		// Capas
 		'bricks_layer' => false,
