@@ -20,11 +20,13 @@ if (!function_exists('flowtitude_get_custom_dir')) {
         
         if (!file_exists($base_dir)) {
             wp_mkdir_p($base_dir);
+            chmod($base_dir, 0775); // Otorgar permisos de escritura al grupo
         }
         
         $type_dir = $base_dir . '/' . $type;
         if (!file_exists($type_dir)) {
             wp_mkdir_p($type_dir);
+            chmod($type_dir, 0775); // Otorgar permisos de escritura al grupo
         }
         
         return $type_dir;

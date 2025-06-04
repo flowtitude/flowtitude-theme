@@ -86,8 +86,11 @@ if (flowtitude_check_requirements()) {
     function flowtitude_theme_activation() {
         // Crear directorios necesarios
         if (function_exists('flowtitude_get_custom_dir')) {
-            flowtitude_get_custom_dir('snippets');
-            flowtitude_get_custom_dir('bricks');
+            $snippets = flowtitude_get_custom_dir('snippets');
+            $bricks   = flowtitude_get_custom_dir('bricks');
+
+            @chmod($snippets, 0755);
+            @chmod($bricks,   0755);
         }
 
         // Cargar configuración por defecto si no existe

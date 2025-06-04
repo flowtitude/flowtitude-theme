@@ -203,3 +203,25 @@ function flowtitude_copy_directory($src, $dst) {
 	return true;
 }
 
+// ----------------------------------------------------------------
+// Helper: garantiza que un directorio exista y sea escribible.
+// ----------------------------------------------------------------
+if ( ! function_exists('flowtitude_ensure_dir') ) {
+	/**
+	 * Crea (si es necesario) un directorio y asegura permisos 0755.
+	 *
+	 * @param string $path
+	 * @return true|WP_Error
+	 */
+	function flowtitude_ensure_dir($path) {
+		if (file_exists($path)) {
+			return (is_writable($path) || @chmod($path, 0755))
+				   ? true
+				   : new WP_Error('dir_not_writable', "El directorio $path no es escribible.");
+		}
+		return wp_mkdir_p($path)
+			   ? true
+			   : new WP_Error('mkdir_failed', "No se pudo crear el directorio $path.");
+	}
+}
+
