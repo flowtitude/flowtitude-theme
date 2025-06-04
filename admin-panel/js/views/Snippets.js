@@ -112,39 +112,7 @@ window.Snippets = {
 		},
 
 		showNotice(msg, isSuccess = true) {
-			const div = document.createElement('div');
-			div.className = 'notice-popup show';
-			div.style.background = isSuccess ? '#059669' : '#e11d48'; // Success: green, Error: red
-			div.style.position = 'fixed';
-			div.style.bottom = '20px';
-			div.style.right = '20px';
-			div.style.padding = '10px 20px';
-			div.style.borderRadius = '5px';
-			div.style.color = '#fff';
-			div.style.maxWidth = '300px';
-			div.style.zIndex = '1000';
-			div.style.display = 'flex';
-			div.style.alignItems = 'center';
-			div.style.height = '50px';
-
-			const icon = document.createElement('span');
-			icon.style.marginRight = '10px';
-			icon.innerHTML = isSuccess ? '✔️' : '⚠️';
-
-			const text = document.createElement('span');
-			text.style.flexGrow = '1';
-			text.style.textAlign = 'center';
-			text.style.width = '100%';
-			text.textContent = msg;
-
-			div.appendChild(icon);
-			div.appendChild(text);
-			document.body.appendChild(div);
-
-			setTimeout(() => {
-				div.classList.remove('show');
-				setTimeout(() => div.remove(), 300);
-			}, 2500);
+			window.FlowtitudeNotify.show(msg, isSuccess ? 'success' : 'error');
 		}
 	},
 

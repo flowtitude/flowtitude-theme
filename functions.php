@@ -74,6 +74,7 @@ function flowtitude_admin_scripts($hook) {
 
 	// Utilidades
 	wp_enqueue_script('flowtitude-error-handler', FLOWTITUDE_URL . '/admin-panel/js/utils/error-handler.js', [], FLOWTITUDE_VERSION, true);
+	wp_enqueue_script('flowtitude-notify', FLOWTITUDE_URL . '/admin-panel/js/utils/notify.js', [], FLOWTITUDE_VERSION, true);
 
 	// Componentes
 	$components = [];

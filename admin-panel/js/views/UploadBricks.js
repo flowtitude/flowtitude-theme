@@ -48,16 +48,7 @@ window.UploadBricks = {
 		},
 
 		showNotice(msg, isSuccess = true) {
-			const div = document.createElement('div');
-			div.className = 'notice-popup show';
-			div.style.background = isSuccess ? '#F59E0B' : '#DC2626';
-			div.textContent = msg;
-			document.body.appendChild(div);
-
-			setTimeout(() => {
-				div.classList.remove('show');
-				setTimeout(() => div.remove(), 300);
-			}, 2500);
+			window.FlowtitudeNotify.show(msg, isSuccess ? 'success' : 'error');
 		}
 	},
 
