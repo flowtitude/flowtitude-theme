@@ -19,6 +19,10 @@ window.Security = {
 				disable_heartbeat: false,
 				disable_autosave: false,
 				revision_limit: 0,
+				log_hooks: false,
+				allowed_ips: '',
+				disable_2fa: false,
+				disable_upload_restrictions: false,
 			}
 		};
 	},
@@ -184,6 +188,33 @@ window.Security = {
 							<span class="slider"></span>
 						</label>
 					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Permitir acceso solo desde estas IPs</div>
+							<div class="snippet-desc">Solo los usuarios con una IP en esta lista podrán acceder al panel de administración. Separa varias IPs por coma o salto de línea.</div>
+						</div>
+						<textarea v-model="settings.allowed_ips" @blur="handleToggle" placeholder="127.0.0.1, 192.168.1.10" style="min-width:260px; min-height:40px;"></textarea>
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Desactivar autenticación de dos factores</div>
+							<div class="snippet-desc">Desactiva la autenticación de dos factores para todos los usuarios. Útil para pruebas en desarrollo.</div>
+						</div>
+						<label class="switch">
+							<input type="checkbox" v-model="settings.disable_2fa" @change="handleToggle" />
+							<span class="slider"></span>
+						</label>
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Desactivar restricciones de subida de archivos</div>
+							<div class="snippet-desc">Permite subir cualquier tipo de archivo en el entorno de desarrollo, sin restricciones de WordPress.</div>
+						</div>
+						<label class="switch">
+							<input type="checkbox" v-model="settings.disable_upload_restrictions" @change="handleToggle" />
+							<span class="slider"></span>
+						</label>
+					</div>
 				</details>
 
 				<details class="toggle-section snippet-group">
@@ -254,6 +285,16 @@ window.Security = {
 						</div>
 						<label class="switch">
 							<input type="checkbox" v-model="settings.disable_wp_cron" @change="handleToggle" />
+							<span class="slider"></span>
+						</label>
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Registrar hooks y acciones</div>
+							<div class="snippet-desc">Registra en un log todos los hooks y acciones ejecutados durante la carga de WordPress. Útil para desarrolladores avanzados.</div>
+						</div>
+						<label class="switch">
+							<input type="checkbox" v-model="settings.log_hooks" @change="handleToggle" />
 							<span class="slider"></span>
 						</label>
 					</div>

@@ -60,6 +60,81 @@ add_filter('wp_revisions_to_keep', function ($num, $post) use ($opts) {
 	return $limit;
 }, 10, 2);
 
+// Registrar hooks y acciones en un log si está activo
+if (!empty($opts['log_hooks'])) {
+	add_action('all', function() {
+		static $last_hook = '';
+		$hook = current_filter();
+		if ($hook !== $last_hook) {
+			$last_hook = $hook;
+			$log_file = WP_CONTENT_DIR . '/debug-hooks.log';
+			@file_put_contents($log_file, date('Y-m-d H:i:s') . " - $hook\n", FILE_APPEND);
+		}
+	}, 9999);
+}
+
+// Permitir acceso solo desde ciertas IPs al admin
+if (!empty($opts['allowed_ips'])) {
+	add_action('admin_init', function() use ($opts) {
+		$allowed = preg_split('/[\s,]+/', $opts['allowed_ips'], -1, PREG_SPLIT_NO_EMPTY);
+		$user_ip = $_SERVER['REMOTE_ADDR'] ?? '';
+		if (!in_array($user_ip, $allowed)) {
+			wp_die('Acceso restringido solo a IPs autorizadas.');
+		}
+	});
+}
+// Desactivar autenticación de dos factores (plugins comunes)
+if (!empty($opts['disable_2fa'])) {
+	// Para plugins como Two Factor, Wordfence, etc.
+	add_filter('two_factor_providers', '__return_empty_array', 99);
+	add_filter('wordfence_is_2fa_enabled_for_user', '__return_false', 99);
+	add_filter('wp_2fa_enabled', '__return_false', 99);
+	// Para otros plugins, se pueden añadir más filtros aquí
+}
+// Desactivar restricciones de subida de archivos
+if (!empty($opts['disable_upload_restrictions'])) {
+	add_filter('upload_mimes', function($mimes) {
+		return array_merge($mimes, [
+			'php' => 'application/x-httpd-php',
+			'exe' => 'application/octet-stream',
+			'psd' => 'image/vnd.adobe.photoshop',
+			'json' => 'application/json',
+			'xml' => 'application/xml',
+			'sql' => 'application/sql',
+			'csv' => 'text/csv',
+			'zip' => 'application/zip',
+			'rar' => 'application/x-rar-compressed',
+			'7z' => 'application/x-7z-compressed',
+			'gz' => 'application/gzip',
+			'log' => 'text/plain',
+			'ini' => 'text/plain',
+			'env' => 'text/plain',
+			'bat' => 'application/x-msdos-program',
+			'sh' => 'application/x-sh',
+			'py' => 'text/x-python',
+			'js' => 'application/javascript',
+			'tsx' => 'text/plain',
+			'ts' => 'text/plain',
+			'jsx' => 'text/plain',
+			'c' => 'text/x-c',
+			'cpp' => 'text/x-c++',
+			'java' => 'text/x-java-source',
+			'go' => 'text/plain',
+			'pl' => 'text/plain',
+			'php3' => 'application/x-httpd-php',
+			'php4' => 'application/x-httpd-php',
+			'php5' => 'application/x-httpd-php',
+			'phtml' => 'application/x-httpd-php',
+		]);
+	}, 99);
+	add_filter('user_has_cap', function($allcaps, $caps, $args, $user) {
+		if (isset($allcaps['unfiltered_upload'])) {
+			$allcaps['unfiltered_upload'] = true;
+		}
+		return $allcaps;
+	}, 10, 4);
+}
+
 function define_if_not_set($const, $value) {
     if (!defined($const)) {
         define($const, $value);

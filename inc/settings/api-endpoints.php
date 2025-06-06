@@ -569,6 +569,10 @@ add_action('rest_api_init', function () {
 				'disable_heartbeat' => false,
 				'disable_autosave' => false,
 				'revision_limit' => 3,
+				'log_hooks' => false,
+				'allowed_ips' => '',
+				'disable_2fa' => false,
+				'disable_upload_restrictions' => false,
 			];
 			$stored = get_option('flowtitude_security_settings', []);
 			return rest_ensure_response(array_merge($defaults, (array) $stored));
@@ -604,6 +608,10 @@ add_action('rest_api_init', function () {
 				'disable_heartbeat' => !empty($params['disable_heartbeat']),
 				'disable_autosave' => !empty($params['disable_autosave']),
 				'revision_limit' => isset($params['revision_limit']) ? intval($params['revision_limit']) : 3,
+				'log_hooks' => !empty($params['log_hooks']),
+				'allowed_ips' => isset($params['allowed_ips']) ? sanitize_text_field($params['allowed_ips']) : '',
+				'disable_2fa' => !empty($params['disable_2fa']),
+				'disable_upload_restrictions' => !empty($params['disable_upload_restrictions']),
 			];
 
 			update_option('flowtitude_security_settings', $sanitized);
