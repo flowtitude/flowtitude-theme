@@ -14,6 +14,11 @@ window.Security = {
 				script_debug: false,
 				savequeries: false,
 				disable_wp_cron: false,
+				wp_cache: false,
+				disable_transients: false,
+				disable_heartbeat: false,
+				disable_autosave: false,
+				revision_limit: 0,
 			}
 		};
 	},
@@ -55,6 +60,25 @@ window.Security = {
 		},
 		showNotice(msg, type = 'info') {
 			window.FlowtitudeNotify.show(msg, type);
+		},
+		async clearTransients() {
+			try {
+				const response = await fetch('/wp-json/flowtitude/v1/security/clear-transients', {
+					headers: { 'X-WP-Nonce': flowtitude_data.rest_nonce }
+				});
+
+				if (!response.ok) {
+					throw new Error('Error al limpiar transients');
+				}
+
+				const result = await response.json();
+				if (result.success) {
+					this.showNotice('Transients limpiados correctamente', 'success');
+				}
+			} catch (error) {
+				console.error('Error al limpiar transients:', error);
+				this.showNotice(error.message, 'error');
+			}
 		}
 	},
 	template: `
@@ -62,6 +86,60 @@ window.Security = {
 			<h1 class="section-title">Seguridad</h1>
 
 			<div class="content-area">
+				<details class="toggle-section snippet-group">
+					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+						<span>Caché y rendimiento</span>
+					</summary>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Activar caché de objetos</div>
+							<div class="snippet-desc">Activa o desactiva la caché de objetos de WordPress. (WP_CACHE)</div>
+						</div>
+						<label class="switch">
+							<input type="checkbox" v-model="settings.wp_cache" @change="handleToggle" />
+							<span class="slider"></span>
+						</label>
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Desactivar generación de transients</div>
+							<div class="snippet-desc">Evita que WordPress y los plugins guarden nuevos transients en la base de datos. Puede afectar a algunas funcionalidades.</div>
+						</div>
+						<label class="switch" style="margin-right: 16px;">
+							<input type="checkbox" v-model="settings.disable_transients" @change="handleToggle" />
+							<span class="slider"></span>
+						</label>
+						<button class="btn btn-inline" @click="clearTransients" style="margin-left: 0;">Limpiar transients</button>
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Desactivar Heartbeat API</div>
+							<div class="snippet-desc">Reduce las peticiones AJAX internas de WordPress, útil para ahorrar recursos en desarrollo.</div>
+						</div>
+						<label class="switch">
+							<input type="checkbox" v-model="settings.disable_heartbeat" @change="handleToggle" />
+							<span class="slider"></span>
+						</label>
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Desactivar guardado automático</div>
+							<div class="snippet-desc">Evita que WordPress guarde borradores automáticamente mientras editas entradas o páginas.</div>
+						</div>
+						<label class="switch">
+							<input type="checkbox" v-model="settings.disable_autosave" @change="handleToggle" />
+							<span class="slider"></span>
+						</label>
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Número máximo de revisiones por post</div>
+							<div class="snippet-desc">Limita cuántas revisiones se guardan por cada entrada o página. (0 para desactivar revisiones)</div>
+						</div>
+						<input type="number" v-model="settings.revision_limit" min="0" max="20" style="width: 80px;" @blur="handleToggle" />
+					</div>
+				</details>
+
 				<details class="toggle-section snippet-group" open>
 					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 						<span>General</span>

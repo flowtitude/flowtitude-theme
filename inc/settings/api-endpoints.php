@@ -563,6 +563,12 @@ add_action('rest_api_init', function () {
 				'script_debug' => false,
 				'savequeries' => false,
 				'disable_wp_cron' => false,
+				// Opciones de caché
+				'wp_cache' => false,
+				'disable_transients' => false,
+				'disable_heartbeat' => false,
+				'disable_autosave' => false,
+				'revision_limit' => 3,
 			];
 			$stored = get_option('flowtitude_security_settings', []);
 			return rest_ensure_response(array_merge($defaults, (array) $stored));
@@ -592,10 +598,27 @@ add_action('rest_api_init', function () {
 				'script_debug'     => !empty($params['script_debug']),
 				'savequeries'      => !empty($params['savequeries']),
 				'disable_wp_cron'  => !empty($params['disable_wp_cron']),
+				// Opciones de caché
+				'wp_cache'         => !empty($params['wp_cache']),
+				'disable_transients'=> !empty($params['disable_transients']),
+				'disable_heartbeat' => !empty($params['disable_heartbeat']),
+				'disable_autosave' => !empty($params['disable_autosave']),
+				'revision_limit' => isset($params['revision_limit']) ? intval($params['revision_limit']) : 3,
 			];
 
 			update_option('flowtitude_security_settings', $sanitized);
 
+			return rest_ensure_response(['success' => true]);
+		},
+		'permission_callback' => fn() => current_user_can('manage_options'),
+	]);
+
+	// Endpoint para limpiar transients
+	register_rest_route('flowtitude/v1', '/security/clear-transients', [
+		'methods' => 'POST',
+		'callback' => function () {
+			global $wpdb;
+			$wpdb->query( "DELETE FROM $wpdb->options WHERE option_name LIKE '_transient_%' OR option_name LIKE '_site_transient_%'" );
 			return rest_ensure_response(['success' => true]);
 		},
 		'permission_callback' => fn() => current_user_can('manage_options'),

@@ -70,15 +70,6 @@ window.Settings = {
 
 					<div class="snippet-item">
 						<div class="snippet-info">
-							<div class="snippet-title">Número máximo de revisiones</div>
-						</div>
-						<div style="display: flex; gap: 12px; align-items: center;">
-							<input type="number" v-model="settings.revision_limit" min="0" max="20" style="width: 80px;" @blur="handleSettingChange" />
-						</div>
-					</div>
-
-					<div class="snippet-item">
-						<div class="snippet-info">
 							<div class="snippet-title">Mover menú de Bricks al final</div>
 						</div>
 						<div style="display: flex; gap: 12px; align-items: center;">
