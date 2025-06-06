@@ -369,3 +369,69 @@ https://tusitio.local/?placeholder=1&width=800&height=400&theme=dark
 
 ---
 
+## Panel de Seguridad: Grupos y Funcionalidades
+
+El panel de Seguridad ahora está organizado en **secciones colapsables** (igual que Settings, Snippets y Bricks) y permite gestionar opciones avanzadas para entornos de desarrollo, staging y migración.
+
+### 1. General
+- **Desactivar REST API para visitantes**
+- **Ocultar versión de WordPress**
+- **Desactivar XML-RPC**
+- **Mejorar seguridad del login**
+- **Permitir acceso solo desde estas IPs**: lista blanca editable (separadas por coma o salto de línea)
+- **Desactivar autenticación de dos factores**: desactiva plugins/métodos comunes de 2FA para pruebas
+- **Desactivar restricciones de subida de archivos**: permite subir cualquier tipo de archivo en desarrollo
+
+### 2. Caché y rendimiento
+- **Activar caché de objetos** (`WP_CACHE`)
+- **Desactivar generación de transients** (impide que WP/plugins guarden nuevos transients)
+- **Limpiar transients** (botón manual)
+- **Desactivar Heartbeat API** (reduce peticiones AJAX internas)
+- **Desactivar guardado automático** (autosave)
+- **Número máximo de revisiones por post** (0 para desactivar revisiones)
+
+### 3. Opciones de debug de WordPress
+- **Activar modo debug** (`WP_DEBUG`)
+- **Mostrar errores en pantalla** (`WP_DEBUG_DISPLAY`)
+- **Escribir errores en log** (`WP_DEBUG_LOG` y ruta editable)
+- **Forzar scripts no minificados** (`SCRIPT_DEBUG`)
+- **Guardar queries SQL** (`SAVEQUERIES`)
+- **Desactivar cron interno** (`DISABLE_WP_CRON`)
+- **Registrar hooks y acciones**: guarda en `wp-content/debug-hooks.log` todos los hooks ejecutados (solo para desarrolladores avanzados)
+
+### 4. Datos y migraciones
+- **Activar modo de migración**: muestra avisos y habilita herramientas especiales
+- **Desactivar plugins de producción**: lista de slugs a desactivar automáticamente en entornos de desarrollo
+- **Reemplazar URLs en la base de datos**: formulario seguro para cambiar URLs tras migrar el sitio
+  - **Backup automático**: antes de reemplazar, se crea un backup SQL en `wp-content/backups/`
+  - **README.txt**: instrucciones para restaurar el backup manualmente si pierdes el acceso
+  - **Advertencia**: si pierdes el acceso al admin, descarga el backup y restáuralo desde tu hosting o WP-CLI
+
+---
+
+## Ejemplo de uso: Reemplazo de URLs en migración
+1. Activa el modo migración en el panel.
+2. Introduce la URL antigua y la nueva en el formulario.
+3. Haz clic en "Reemplazar URLs en la base de datos".
+4. Se creará un backup SQL en `wp-content/backups/` y se mostrará la ruta.
+5. Si algo sale mal, sigue las instrucciones del `README.txt` para restaurar el backup.
+
+---
+
+## Advertencias y buenas prácticas
+- **Haz siempre backup antes de cambios críticos** (el sistema lo hace automáticamente en migración).
+- **Lee el README.txt** en la carpeta de backups para restaurar si pierdes el acceso.
+- **No uses opciones avanzadas en producción** salvo que sepas lo que haces.
+- **El log de hooks puede crecer rápido**: úsalo solo para debugging puntual.
+
+---
+
+## Otras mejoras
+- Todas las opciones se gestionan desde el panel, sin tocar archivos manualmente.
+- El mu-plugin se copia automáticamente al activar el tema.
+- Los cambios se aplican de forma inmediata y segura.
+
+---
+
+Para dudas, soporte o sugerencias, contacta con el equipo de Flowtitude.
+

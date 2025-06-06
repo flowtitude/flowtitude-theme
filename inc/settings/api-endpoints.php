@@ -645,8 +645,29 @@ add_action('rest_api_init', function () {
 			$old_url = isset($params['old_url']) ? trim($params['old_url']) : '';
 			$new_url = isset($params['new_url']) ? trim($params['new_url']) : '';
 			if (!$old_url || !$new_url) return rest_ensure_response(['success' => false, 'message' => 'URLs no válidas']);
-			// Tablas y campos a reemplazar
+			// Backup antes de reemplazar
 			global $wpdb;
+			$backup_dir = WP_CONTENT_DIR . '/backups';
+			if (!file_exists($backup_dir)) @mkdir($backup_dir, 0755, true);
+			$timestamp = date('Ymd_His');
+			$backup_file = $backup_dir . "/db-backup-{$timestamp}.sql";
+			$tables = [$wpdb->options, $wpdb->posts, $wpdb->postmeta, $wpdb->usermeta];
+			$dump = '';
+			foreach ($tables as $table) {
+				$rows = $wpdb->get_results("SELECT * FROM $table", ARRAY_A);
+				if ($rows) {
+					$dump .= "-- Table: $table\n";
+					foreach ($rows as $row) {
+						$cols = array_map(function($v) use ($wpdb) { return isset($v) ? "'" . esc_sql($v) . "'" : 'NULL'; }, $row);
+						$dump .= "INSERT INTO `$table` (`" . implode('`,`', array_keys($row)) . "`) VALUES (" . implode(',', $cols) . ");\n";
+					}
+				}
+			}
+			file_put_contents($backup_file, $dump);
+			// Instrucciones README
+			$readme = "INSTRUCCIONES PARA RESTAURAR EL BACKUP DE LA BASE DE DATOS\n\n1. Descarga el archivo .sql de este directorio.\n2. Accede a tu panel de hosting o usa WP-CLI/SSH.\n3. Restaura el backup con phpMyAdmin, WP-CLI o similar:\n\nWP-CLI:\nwp db import db-backup-{$timestamp}.sql\n\nphpMyAdmin:\n- Selecciona la base de datos y usa la opción 'Importar'.\n\nSi pierdes el acceso al admin, esta es la forma de revertir el cambio de URLs.\n";
+			file_put_contents($backup_dir . '/README.txt', $readme);
+			// Tablas y campos a reemplazar
 			$replaced = 0;
 			// options
 			$options = $wpdb->get_results("SELECT option_id, option_value FROM $wpdb->options WHERE option_value LIKE '%" . esc_sql($old_url) . "%'");
@@ -671,7 +692,7 @@ add_action('rest_api_init', function () {
 				$wpdb->update($wpdb->usermeta, ['meta_value' => maybe_serialize($new_val)], ['umeta_id' => $um->umeta_id]);
 				$replaced++;
 			}
-			return rest_ensure_response(['success' => true, 'message' => "Reemplazo completado en $replaced registros."]);
+			return rest_ensure_response(['success' => true, 'message' => "Reemplazo completado en $replaced registros. Backup: $backup_file"]);
 		},
 		'permission_callback' => fn() => current_user_can('manage_options'),
 	]);
