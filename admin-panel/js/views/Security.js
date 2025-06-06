@@ -23,7 +23,12 @@ window.Security = {
 				allowed_ips: '',
 				disable_2fa: false,
 				disable_upload_restrictions: false,
-			}
+				migration_mode: false,
+				plugins_to_deactivate: '',
+			},
+			migrationOldUrl: '',
+			migrationNewUrl: '',
+			showMigrationConfirm: false,
 		};
 	},
 	created() {
@@ -81,6 +86,34 @@ window.Security = {
 				}
 			} catch (error) {
 				console.error('Error al limpiar transients:', error);
+				this.showNotice(error.message, 'error');
+			}
+		},
+		confirmReplaceUrls() {
+			this.showMigrationConfirm = true;
+		},
+		async replaceUrlsInDb() {
+			this.showMigrationConfirm = false;
+			try {
+				const response = await fetch('/wp-json/flowtitude/v1/security/replace-urls', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-WP-Nonce': flowtitude_data.rest_nonce
+					},
+					body: JSON.stringify({
+						old_url: this.migrationOldUrl,
+						new_url: this.migrationNewUrl
+					})
+				});
+				const result = await response.json();
+				if (result.success) {
+					this.showNotice('URLs reemplazadas correctamente', 'success');
+				} else {
+					this.showNotice(result.message || 'Error al reemplazar URLs', 'error');
+				}
+			} catch (error) {
+				console.error('Error al reemplazar URLs:', error);
 				this.showNotice(error.message, 'error');
 			}
 		}
@@ -297,6 +330,46 @@ window.Security = {
 							<input type="checkbox" v-model="settings.log_hooks" @change="handleToggle" />
 							<span class="slider"></span>
 						</label>
+					</div>
+				</details>
+
+				<details class="toggle-section snippet-group">
+					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+						<span>Datos y migraciones</span>
+					</summary>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Activar modo de migración</div>
+							<div class="snippet-desc">Activa el modo migración para mostrar avisos y habilitar herramientas especiales de migración.</div>
+						</div>
+						<label class="switch">
+							<input type="checkbox" v-model="settings.migration_mode" @change="handleToggle" />
+							<span class="slider"></span>
+						</label>
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Desactivar plugins de producción</div>
+							<div class="snippet-desc">Introduce los slugs de los plugins a desactivar en entornos de desarrollo, uno por línea.</div>
+						</div>
+						<textarea v-model="settings.plugins_to_deactivate" @blur="handleToggle" placeholder="wordfence\nwp-rocket\nmailgun" style="min-width:260px; min-height:40px;"></textarea>
+					</div>
+					<div v-if="settings.migration_mode" class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Reemplazar URLs en la base de datos</div>
+							<div class="snippet-desc">Introduce la URL antigua y la nueva. Esta acción es irreversible, haz un backup antes de continuar.</div>
+						</div>
+						<input type="text" v-model="migrationOldUrl" placeholder="URL antigua (ej: https://produccion.com)" style="min-width:220px; margin-bottom:6px;" />
+						<input type="text" v-model="migrationNewUrl" placeholder="URL nueva (ej: https://staging.com)" style="min-width:220px; margin-bottom:6px;" />
+						<button class="btn btn-inline" @click="confirmReplaceUrls">Reemplazar URLs en la base de datos</button>
+					</div>
+					<div v-if="showMigrationConfirm" class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">¿Estás seguro?</div>
+							<div class="snippet-desc">Esta acción reemplazará todas las apariciones de la URL antigua por la nueva en la base de datos. Haz un backup antes de continuar.</div>
+						</div>
+						<button class="btn btn-panel" @click="replaceUrlsInDb">Sí, reemplazar ahora</button>
+						<button class="btn btn-panel" @click="showMigrationConfirm = false">Cancelar</button>
 					</div>
 				</details>
 			</div>

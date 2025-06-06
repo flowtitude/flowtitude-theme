@@ -573,6 +573,8 @@ add_action('rest_api_init', function () {
 				'allowed_ips' => '',
 				'disable_2fa' => false,
 				'disable_upload_restrictions' => false,
+				'migration_mode' => false,
+				'plugins_to_deactivate' => '',
 			];
 			$stored = get_option('flowtitude_security_settings', []);
 			return rest_ensure_response(array_merge($defaults, (array) $stored));
@@ -612,6 +614,8 @@ add_action('rest_api_init', function () {
 				'allowed_ips' => isset($params['allowed_ips']) ? sanitize_text_field($params['allowed_ips']) : '',
 				'disable_2fa' => !empty($params['disable_2fa']),
 				'disable_upload_restrictions' => !empty($params['disable_upload_restrictions']),
+				'migration_mode' => !empty($params['migration_mode']),
+				'plugins_to_deactivate' => isset($params['plugins_to_deactivate']) ? sanitize_textarea_field($params['plugins_to_deactivate']) : '',
 			];
 
 			update_option('flowtitude_security_settings', $sanitized);
@@ -628,6 +632,46 @@ add_action('rest_api_init', function () {
 			global $wpdb;
 			$wpdb->query( "DELETE FROM $wpdb->options WHERE option_name LIKE '_transient_%' OR option_name LIKE '_site_transient_%'" );
 			return rest_ensure_response(['success' => true]);
+		},
+		'permission_callback' => fn() => current_user_can('manage_options'),
+	]);
+
+	// Endpoint para reemplazar URLs en la base de datos
+	register_rest_route('flowtitude/v1', '/security/replace-urls', [
+		'methods' => 'POST',
+		'callback' => function ($request) {
+			if (!current_user_can('manage_options')) return new WP_Error('forbidden', 'No autorizado', ['status' => 403]);
+			$params = $request->get_json_params();
+			$old_url = isset($params['old_url']) ? trim($params['old_url']) : '';
+			$new_url = isset($params['new_url']) ? trim($params['new_url']) : '';
+			if (!$old_url || !$new_url) return rest_ensure_response(['success' => false, 'message' => 'URLs no válidas']);
+			// Tablas y campos a reemplazar
+			global $wpdb;
+			$replaced = 0;
+			// options
+			$options = $wpdb->get_results("SELECT option_id, option_value FROM $wpdb->options WHERE option_value LIKE '%" . esc_sql($old_url) . "%'");
+			foreach ($options as $opt) {
+				$new_val = flowtitude_recursive_replace($old_url, $new_url, maybe_unserialize($opt->option_value));
+				$wpdb->update($wpdb->options, ['option_value' => maybe_serialize($new_val)], ['option_id' => $opt->option_id]);
+				$replaced++;
+			}
+			// posts
+			$wpdb->query($wpdb->prepare("UPDATE $wpdb->posts SET post_content = REPLACE(post_content, %s, %s)", $old_url, $new_url));
+			// postmeta
+			$postmeta = $wpdb->get_results("SELECT meta_id, meta_value FROM $wpdb->postmeta WHERE meta_value LIKE '%" . esc_sql($old_url) . "%'");
+			foreach ($postmeta as $pm) {
+				$new_val = flowtitude_recursive_replace($old_url, $new_url, maybe_unserialize($pm->meta_value));
+				$wpdb->update($wpdb->postmeta, ['meta_value' => maybe_serialize($new_val)], ['meta_id' => $pm->meta_id]);
+				$replaced++;
+			}
+			// usermeta
+			$usermeta = $wpdb->get_results("SELECT umeta_id, meta_value FROM $wpdb->usermeta WHERE meta_value LIKE '%" . esc_sql($old_url) . "%'");
+			foreach ($usermeta as $um) {
+				$new_val = flowtitude_recursive_replace($old_url, $new_url, maybe_unserialize($um->meta_value));
+				$wpdb->update($wpdb->usermeta, ['meta_value' => maybe_serialize($new_val)], ['umeta_id' => $um->umeta_id]);
+				$replaced++;
+			}
+			return rest_ensure_response(['success' => true, 'message' => "Reemplazo completado en $replaced registros."]);
 		},
 		'permission_callback' => fn() => current_user_can('manage_options'),
 	]);
@@ -800,5 +844,23 @@ function flowtitude_delete_bricks_component($request){
 	if(!unlink($path)) return new WP_Error('delete_failed','No se pudo eliminar',['status'=>500]);
 	flowtitude_debug_log("Componente Bricks eliminado: $file_rel",'success');
 	return rest_ensure_response(['success'=>true]);
+}
+
+// Función recursiva para reemplazo seguro (serializados)
+function flowtitude_recursive_replace($old, $new, $data) {
+	if (is_array($data)) {
+		foreach ($data as $k => $v) {
+			$data[$k] = flowtitude_recursive_replace($old, $new, $v);
+		}
+		return $data;
+	} elseif (is_object($data)) {
+		foreach ($data as $k => $v) {
+			$data->$k = flowtitude_recursive_replace($old, $new, $v);
+		}
+		return $data;
+	} elseif (is_string($data)) {
+		return str_replace($old, $new, $data);
+	}
+	return $data;
 }
 

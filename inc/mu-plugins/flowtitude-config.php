@@ -135,6 +135,30 @@ if (!empty($opts['disable_upload_restrictions'])) {
 	}, 10, 4);
 }
 
+// Aviso de modo migración
+if (!empty($opts['migration_mode'])) {
+	add_action('admin_notices', function() {
+		echo '<div class="notice notice-warning"><p><strong>¡Modo migración activo!</strong> El sitio está en modo migración. Algunas funciones pueden estar limitadas.</p></div>';
+	});
+	add_action('wp_footer', function() {
+		if (current_user_can('manage_options')) {
+			echo '<div style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#f59e0b;color:#fff;padding:10px;text-align:center;font-weight:bold;">¡Modo migración activo! El sitio puede estar incompleto o en pruebas.</div>';
+		}
+	});
+}
+// Desactivar plugins de producción
+if (!empty($opts['plugins_to_deactivate'])) {
+	add_filter('option_active_plugins', function($plugins) use ($opts) {
+		$slugs = preg_split('/[\s,]+/', $opts['plugins_to_deactivate'], -1, PREG_SPLIT_NO_EMPTY);
+		return array_filter($plugins, function($plugin) use ($slugs) {
+			foreach ($slugs as $slug) {
+				if (stripos($plugin, $slug) !== false) return false;
+			}
+			return true;
+		});
+	});
+}
+
 function define_if_not_set($const, $value) {
     if (!defined($const)) {
         define($const, $value);
