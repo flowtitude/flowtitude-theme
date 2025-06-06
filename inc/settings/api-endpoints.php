@@ -555,6 +555,14 @@ add_action('rest_api_init', function () {
 				'hide_wp_version' => false,
 				'disable_xmlrpc' => false,
 				'secure_login' => false,
+				// Opciones de debug
+				'wp_debug' => false,
+				'wp_debug_display' => false,
+				'wp_debug_log' => false,
+				'wp_debug_log_path' => '',
+				'script_debug' => false,
+				'savequeries' => false,
+				'disable_wp_cron' => false,
 			];
 			$stored = get_option('flowtitude_security_settings', []);
 			return rest_ensure_response(array_merge($defaults, (array) $stored));
@@ -576,6 +584,14 @@ add_action('rest_api_init', function () {
 				'hide_wp_version'  => !empty($params['hide_wp_version']),
 				'disable_xmlrpc'   => !empty($params['disable_xmlrpc']),
 				'secure_login'     => !empty($params['secure_login']),
+				// Opciones de debug
+				'wp_debug'         => !empty($params['wp_debug']),
+				'wp_debug_display' => !empty($params['wp_debug_display']),
+				'wp_debug_log'     => !empty($params['wp_debug_log']),
+				'wp_debug_log_path'=> isset($params['wp_debug_log_path']) ? sanitize_text_field($params['wp_debug_log_path']) : '',
+				'script_debug'     => !empty($params['script_debug']),
+				'savequeries'      => !empty($params['savequeries']),
+				'disable_wp_cron'  => !empty($params['disable_wp_cron']),
 			];
 
 			update_option('flowtitude_security_settings', $sanitized);

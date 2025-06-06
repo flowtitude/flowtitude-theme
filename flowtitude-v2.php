@@ -93,6 +93,25 @@ if (flowtitude_check_requirements()) {
             @chmod($bricks,   0755);
         }
 
+        // Copiar el mu-plugin de configuración avanzada
+        $src_mu = get_stylesheet_directory() . '/inc/mu-plugins/flowtitude-config.php';
+        $dst_dir = dirname(WP_CONTENT_DIR) . '/wp-content/mu-plugins';
+        $dst_mu = $dst_dir . '/flowtitude-config.php';
+        if (!file_exists($dst_dir)) {
+            @mkdir($dst_dir, 0755, true);
+        }
+        if (file_exists($src_mu)) {
+            if (!@copy($src_mu, $dst_mu)) {
+                add_action('admin_notices', function() use ($dst_mu) {
+                    echo '<div class="notice notice-error"><p><strong>Flowtitude:</strong> No se pudo copiar el mu-plugin de configuración a <code>' . esc_html($dst_mu) . '</code>. Por favor, copia el archivo manualmente.</p></div>';
+                });
+            }
+        } else {
+            add_action('admin_notices', function() use ($src_mu) {
+                echo '<div class="notice notice-error"><p><strong>Flowtitude:</strong> No se encontró el archivo fuente del mu-plugin en <code>' . esc_html($src_mu) . '</code>.</p></div>';
+            });
+        }
+
         // Cargar configuración por defecto si no existe
         if (false === get_option('flowtitude_settings')) {
             add_option('flowtitude_settings', flowtitude_get_settings_defaults());
