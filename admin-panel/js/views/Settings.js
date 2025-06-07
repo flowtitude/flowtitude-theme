@@ -66,6 +66,7 @@ window.Settings = {
 				<details class="toggle-section snippet-group" open>
 					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 						<span>General</span>
+						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>
 
 					<div class="snippet-item">
@@ -85,6 +86,7 @@ window.Settings = {
 				<details class="toggle-section snippet-group">
 					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 						<span>CSS y rendimiento</span>
+						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>
 
 					<div class="snippet-item">
@@ -148,6 +150,7 @@ window.Settings = {
 				<details class="toggle-section snippet-group">
 					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 						<span>Integraciones</span>
+						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>
 
 					<div class="snippet-item">

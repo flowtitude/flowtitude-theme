@@ -114,10 +114,7 @@ window.Bricks = {
 				<details v-for="(items, group) in groups" :key="group" class="toggle-section snippet-group" open>
 					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 					{{ group.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') }}
-						<svg class="arrow-icon" viewBox="0 0 20 20" fill="currentColor">
-							<path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clip-rule="evenodd" />
-						</svg>
-						
+						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>
 
 					<div v-for="item in items" :key="item.file" class="snippet-item">
