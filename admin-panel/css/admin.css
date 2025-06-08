@@ -573,6 +573,17 @@ select.small {
     background-color: #b91c1c;
 }
 
+.btn-small {
+    font-size: 13px;
+    padding: 4px 16px;
+    height: 32px;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0;
+    margin-bottom: 0;
+}
 
 /* === Secciones === */
 /* --- Home --- */
@@ -874,10 +885,10 @@ input[type="color"] {
   right: 0.25rem;
   top: 0.25rem;
   transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
-  color: inherit;
+  color: #666;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.5;
+  stroke-width: 1;
   pointer-events: none;
 }
 .toggle-section.snippet-group[open] > summary .caret {
@@ -889,4 +900,8 @@ input[type="color"] {
   min-width: 0;
   display: block;
   font-weight: bold;
+}
+
+.toggle-section.snippet-group > summary .caret {
+  stroke-width: 1 !important;
 }

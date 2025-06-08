@@ -123,61 +123,6 @@ window.Security = {
 			<h1 class="section-title">Seguridad</h1>
 
 			<div class="content-area">
-				<details class="toggle-section snippet-group">
-					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
-						<span>Caché y rendimiento</span>
-						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-					</summary>
-					<div class="snippet-item">
-						<div class="snippet-info">
-							<div class="snippet-title">Activar caché de objetos</div>
-							<div class="snippet-desc">Activa o desactiva la caché de objetos de WordPress. (WP_CACHE)</div>
-						</div>
-						<label class="switch">
-							<input type="checkbox" v-model="settings.wp_cache" @change="handleToggle" />
-							<span class="slider"></span>
-						</label>
-					</div>
-					<div class="snippet-item">
-						<div class="snippet-info">
-							<div class="snippet-title">Desactivar generación de transients</div>
-							<div class="snippet-desc">Evita que WordPress y los plugins guarden nuevos transients en la base de datos. Puede afectar a algunas funcionalidades.</div>
-						</div>
-						<label class="switch" style="margin-right: 16px;">
-							<input type="checkbox" v-model="settings.disable_transients" @change="handleToggle" />
-							<span class="slider"></span>
-						</label>
-						<button class="btn btn-inline" @click="clearTransients" style="margin-left: 0;">Limpiar transients</button>
-					</div>
-					<div class="snippet-item">
-						<div class="snippet-info">
-							<div class="snippet-title">Desactivar Heartbeat API</div>
-							<div class="snippet-desc">Reduce las peticiones AJAX internas de WordPress, útil para ahorrar recursos en desarrollo.</div>
-						</div>
-						<label class="switch">
-							<input type="checkbox" v-model="settings.disable_heartbeat" @change="handleToggle" />
-							<span class="slider"></span>
-						</label>
-					</div>
-					<div class="snippet-item">
-						<div class="snippet-info">
-							<div class="snippet-title">Desactivar guardado automático</div>
-							<div class="snippet-desc">Evita que WordPress guarde borradores automáticamente mientras editas entradas o páginas.</div>
-						</div>
-						<label class="switch">
-							<input type="checkbox" v-model="settings.disable_autosave" @change="handleToggle" />
-							<span class="slider"></span>
-						</label>
-					</div>
-					<div class="snippet-item">
-						<div class="snippet-info">
-							<div class="snippet-title">Número máximo de revisiones por post</div>
-							<div class="snippet-desc">Limita cuántas revisiones se guardan por cada entrada o página. (0 para desactivar revisiones)</div>
-						</div>
-						<input type="number" v-model="settings.revision_limit" min="0" max="20" style="width: 80px;" @blur="handleToggle" />
-					</div>
-				</details>
-
 				<details class="toggle-section snippet-group" open>
 					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 						<span>General</span>
@@ -228,7 +173,7 @@ window.Security = {
 							<div class="snippet-title">Permitir acceso solo desde estas IPs</div>
 							<div class="snippet-desc">Solo los usuarios con una IP en esta lista podrán acceder al panel de administración. Separa varias IPs por coma o salto de línea.</div>
 						</div>
-						<textarea v-model="settings.allowed_ips" @blur="handleToggle" placeholder="127.0.0.1, 192.168.1.10" style="min-width:260px; min-height:40px;"></textarea>
+						<input type="text" v-model="settings.allowed_ips" @blur="handleToggle" placeholder="127.0.0.1, 192.168.1.10" style="min-width:300px; width:50%; max-width:100%;" />
 					</div>
 					<div class="snippet-item">
 						<div class="snippet-info">
@@ -254,7 +199,7 @@ window.Security = {
 
 				<details class="toggle-section snippet-group">
 					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
-						<span>Opciones de debug de WordPress</span>
+						<span>Debug</span>
 						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>
 					<div class="snippet-item">
@@ -338,7 +283,64 @@ window.Security = {
 
 				<details class="toggle-section snippet-group">
 					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
-						<span>Datos y migraciones</span>
+						<span>Caché y rendimiento</span>
+						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					</summary>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Activar caché de objetos</div>
+							<div class="snippet-desc">Activa o desactiva la caché de objetos de WordPress. (WP_CACHE)</div>
+						</div>
+						<label class="switch">
+							<input type="checkbox" v-model="settings.wp_cache" @change="handleToggle" />
+							<span class="slider"></span>
+						</label>
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info" style="flex: 1 1 auto; min-width: 0;">
+							<div class="snippet-title">Desactivar generación de transients</div>
+							<div class="snippet-desc">Evita que WordPress y los plugins guarden nuevos transients en la base de datos. Puede afectar a algunas funcionalidades. Puedes limpiar los transients existentes manualmente.</div>
+						</div>
+						<div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 220px;">
+							<button class="btn btn-small" @click="clearTransients">Limpiar transients</button>
+							<label class="switch">
+								<input type="checkbox" v-model="settings.disable_transients" @change="handleToggle" />
+								<span class="slider"></span>
+							</label>
+						</div>
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Desactivar Heartbeat API</div>
+							<div class="snippet-desc">Reduce las peticiones AJAX internas de WordPress, útil para ahorrar recursos en desarrollo.</div>
+						</div>
+						<label class="switch">
+							<input type="checkbox" v-model="settings.disable_heartbeat" @change="handleToggle" />
+							<span class="slider"></span>
+						</label>
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Desactivar guardado automático</div>
+							<div class="snippet-desc">Evita que WordPress guarde borradores automáticamente mientras editas entradas o páginas.</div>
+						</div>
+						<label class="switch">
+							<input type="checkbox" v-model="settings.disable_autosave" @change="handleToggle" />
+							<span class="slider"></span>
+						</label>
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Número máximo de revisiones por post</div>
+							<div class="snippet-desc">Limita cuántas revisiones se guardan por cada entrada o página. (0 para desactivar revisiones)</div>
+						</div>
+						<input type="number" v-model="settings.revision_limit" min="0" max="20" style="width: 80px;" @blur="handleToggle" />
+					</div>
+				</details>
+
+				<details class="toggle-section snippet-group">
+					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+						<span>Migraciones</span>
 						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>
 					<div class="snippet-item">
@@ -363,9 +365,11 @@ window.Security = {
 							<div class="snippet-title">Reemplazar URLs en la base de datos</div>
 							<div class="snippet-desc">Introduce la URL antigua y la nueva. Esta acción es irreversible, haz un backup antes de continuar.</div>
 						</div>
-						<input type="text" v-model="migrationOldUrl" placeholder="URL antigua (ej: https://produccion.com)" style="min-width:220px; margin-bottom:6px;" />
-						<input type="text" v-model="migrationNewUrl" placeholder="URL nueva (ej: https://staging.com)" style="min-width:220px; margin-bottom:6px;" />
-						<button class="btn btn-inline" @click="confirmReplaceUrls">Reemplazar URLs en la base de datos</button>
+						<div>
+							<input type="text" v-model="migrationOldUrl" placeholder="URL antigua (ej: https://produccion.com)" style="min-width: 220px; width: 32%; max-width: 100%; margin-right: 8px;" />
+							<input type="text" v-model="migrationNewUrl" placeholder="URL nueva (ej: https://staging.com)" style="min-width: 220px; width: 32%; max-width: 100%; margin-right: 8px;" />
+							<button class="btn btn-inline" @click="confirmReplaceUrls">Reemplazar URLs</button>
+						</div>
 					</div>
 					<div v-if="showMigrationConfirm" class="snippet-item">
 						<div class="snippet-info">
