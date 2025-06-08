@@ -29,6 +29,7 @@ window.Security = {
 			migrationOldUrl: '',
 			migrationNewUrl: '',
 			showMigrationConfirm: false,
+			openSection: 'General', // Sección abierta por defecto
 		};
 	},
 	created() {
@@ -116,6 +117,9 @@ window.Security = {
 				console.error('Error al reemplazar URLs:', error);
 				this.showNotice(error.message, 'error');
 			}
+		},
+		setOpenSection(section) {
+			this.openSection = this.openSection === section ? null : section;
 		}
 	},
 	template: `
@@ -123,8 +127,8 @@ window.Security = {
 			<h1 class="section-title">Seguridad</h1>
 
 			<div class="content-area">
-				<details class="toggle-section snippet-group" open>
-					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+				<details class="toggle-section snippet-group" :open="openSection === 'General'">
+					<summary @click.prevent="setOpenSection('General')" style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 						<span>General</span>
 						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>
@@ -197,8 +201,8 @@ window.Security = {
 					</div>
 				</details>
 
-				<details class="toggle-section snippet-group">
-					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+				<details class="toggle-section snippet-group" :open="openSection === 'Debug'">
+					<summary @click.prevent="setOpenSection('Debug')" style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 						<span>Debug</span>
 						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>
@@ -281,8 +285,8 @@ window.Security = {
 					</div>
 				</details>
 
-				<details class="toggle-section snippet-group">
-					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+				<details class="toggle-section snippet-group" :open="openSection === 'Caché'">
+					<summary @click.prevent="setOpenSection('Caché')" style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 						<span>Caché y rendimiento</span>
 						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>
@@ -338,8 +342,8 @@ window.Security = {
 					</div>
 				</details>
 
-				<details class="toggle-section snippet-group">
-					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+				<details class="toggle-section snippet-group" :open="openSection === 'Migraciones'">
+					<summary @click.prevent="setOpenSection('Migraciones')" style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 						<span>Migraciones</span>
 						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>
