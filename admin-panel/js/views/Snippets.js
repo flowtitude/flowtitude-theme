@@ -5,6 +5,7 @@ window.Snippets = {
 			activeSnippets: [],
 			systemSnippets: [],
 			message: '',
+			openGroup: null,
 		};
 	},
 
@@ -113,6 +114,10 @@ window.Snippets = {
 
 		showNotice(msg, type = 'info') {
 			window.FlowtitudeNotify.show(msg, type);
+		},
+
+		setOpenGroup(group) {
+			this.openGroup = this.openGroup === group ? null : group;
 		}
 	},
 
@@ -130,8 +135,8 @@ window.Snippets = {
 			</div>
 
 			<div v-else class="content-area">
-				<details v-for="(group, key) in snippets" :key="key" class="toggle-section snippet-group" open>
-					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+				<details v-for="(group, key) in snippets" :key="key" class="toggle-section snippet-group" :open="openGroup === key">
+					<summary @click.prevent="setOpenGroup(key)" style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 						<span>{{ key }}</span>
 						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>

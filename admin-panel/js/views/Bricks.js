@@ -7,7 +7,8 @@ window.Bricks = {
 			showUploadModal: false,
 			uploadGroup: 'custom-elements',
 			uploading: false,
-			active: []
+			active: [],
+			openGroup: null,
 		}
 	},
 	computed: {
@@ -93,6 +94,9 @@ window.Bricks = {
 		},
 		showNotice(msg, type = 'info') {
 			window.FlowtitudeNotify.show(msg, type);
+		},
+		setOpenGroup(group) {
+			this.openGroup = this.openGroup === group ? null : group;
 		}
 	},
 	created() {
@@ -111,8 +115,8 @@ window.Bricks = {
 
 			<div v-else class="content-area">
 
-				<details v-for="(items, group) in groups" :key="group" class="toggle-section snippet-group" open>
-					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+				<details v-for="(items, group) in groups" :key="group" class="toggle-section snippet-group" :open="openGroup === group">
+					<summary @click.prevent="setOpenGroup(group)" style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 					{{ group.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') }}
 						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>

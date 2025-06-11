@@ -14,7 +14,8 @@ window.Settings = {
 			},
 			message: '',
 			isSaving: false,
-			saveTimeout: null
+			saveTimeout: null,
+			openSection: 'General',
 		};
 	},
 	created() {
@@ -56,6 +57,9 @@ window.Settings = {
 			this.saveTimeout = setTimeout(() => {
 				this.saveSettings();
 			}, 500); // 500ms de debounce
+		},
+		setOpenSection(section) {
+			this.openSection = this.openSection === section ? null : section;
 		}
 	},
 	template: `
@@ -63,8 +67,8 @@ window.Settings = {
 			<h1 class="section-title">Ajustes del sistema</h1>
 
 			<div class="content-area">
-				<details class="toggle-section snippet-group" open>
-					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+				<details class="toggle-section snippet-group" :open="openSection === 'General'">
+					<summary @click.prevent="setOpenSection('General')" style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 						<span>General</span>
 						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>
@@ -82,9 +86,8 @@ window.Settings = {
 					</div>
 				</details>
 
-				<!-- Panel: CSS y rendimiento -->
-				<details class="toggle-section snippet-group">
-					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+				<details class="toggle-section snippet-group" :open="openSection === 'CSS'">
+					<summary @click.prevent="setOpenSection('CSS')" style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 						<span>CSS y rendimiento</span>
 						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>
@@ -146,9 +149,8 @@ window.Settings = {
 					</div>
 				</details>
 
-				<!-- Panel: Integraciones -->
-				<details class="toggle-section snippet-group">
-					<summary style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+				<details class="toggle-section snippet-group" :open="openSection === 'Integraciones'">
+					<summary @click.prevent="setOpenSection('Integraciones')" style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
 						<span>Integraciones</span>
 						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>
