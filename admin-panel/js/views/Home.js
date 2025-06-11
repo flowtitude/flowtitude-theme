@@ -109,20 +109,27 @@ window.Home = {
 							{{ security.secure_login ? 'SI' : 'NO' }}
 						</span>
 					</p>
+					<hr>
+					<p class="info-value">
+						<span>Debug activo</span>
+						<span :class="security.wp_debug ? 'badge badge-success' : 'badge badge-danger'">
+							{{ security.wp_debug ? 'SI' : 'NO' }}
+						</span>
+					</p>
 				</div>
 
 				<!-- Capas CSS -->
 				<div class="info-box">
-					<h3>Capas CSS</h3>
+					<h3>Ajustes</h3>
 					<p class="info-value">
-						<span>Bricks</span>
+						<span>Bricks layer</span>
 						<span :class="settings.bricks_layer ? 'badge badge-success' : 'badge badge-danger'">
 							{{ settings.bricks_layer ? 'SI' : 'NO' }}
 						</span>
 					</p>
 					<hr>
 					<p class="info-value">
-						<span>WordPress</span>
+						<span>WordPress layer</span>
 						<span :class="settings.wp_layer ? 'badge badge-success' : 'badge badge-danger'">
 							{{ settings.wp_layer ? 'SI' : 'NO' }}
 						</span>
