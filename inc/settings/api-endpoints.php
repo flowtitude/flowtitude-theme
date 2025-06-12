@@ -714,76 +714,144 @@ function flowtitude_upload_bricks_component($request) {
 	}
 
 	$file = $_FILES['file'];
-	
-	// Verificar que sea un archivo PHP
-	if (pathinfo($file['name'], PATHINFO_EXTENSION) !== 'php') {
-		return new WP_Error('invalid_type', 'Solo se permiten archivos PHP.', ['status' => 400]);
-	}
+	$ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
 
-	// Verificar tamaño del archivo
-	if ($file['size'] > 51200) {
-		return new WP_Error('file_too_large', 'Archivo demasiado grande (máx. 50KB).', ['status' => 400]);
-	}
-
-	// Leer el contenido del archivo
-	$contents = file_get_contents($file['tmp_name']);
-	
-	// Verificar código malicioso
-	if (preg_match('/(eval|base64_decode|shell_exec|system|exec)/i', $contents)) {
-		return new WP_Error('unsafe_code', 'El archivo contiene funciones peligrosas.', ['status' => 400]);
-	}
-
-	// Extraer la carpeta del tercer comentario
-	$folder = 'custom-elements'; // Valor por defecto
-	
-	// Buscar en comentarios de una línea
-	$lines = explode("\n", $contents);
-	$comment_count = 0;
-	
-	foreach ($lines as $line) {
-		$line = trim($line);
-		if (preg_match('/^\/\/\s*(.+)$/', $line, $matches)) {
-			$comment_count++;
-			if ($comment_count === 3) {
-				$folder = trim($matches[1]);
+	if ($ext === 'php') {
+		// --- Lógica original para un solo archivo PHP ---
+		// ... existing code ...
+		// (copiar aquí la lógica actual para .php)
+		$max_size = 51200;
+		if ($file['size'] > $max_size) {
+			return new WP_Error('file_too_large', 'Archivo demasiado grande (máx. 50KB).', ['status' => 400]);
+		}
+		$contents = file_get_contents($file['tmp_name']);
+		if (preg_match('/(eval|base64_decode|shell_exec|system|exec)/i', $contents)) {
+			return new WP_Error('unsafe_code', 'El archivo contiene funciones peligrosas.', ['status' => 400]);
+		}
+		$folder = 'custom-elements';
+		$lines = explode("\n", $contents);
+		$comment_count = 0;
+		foreach ($lines as $line) {
+			$line = trim($line);
+			if (preg_match('/^\/\/\s*(.+)$/', $line, $matches)) {
+				$comment_count++;
+				if ($comment_count === 3) {
+					$folder = trim($matches[1]);
+					break;
+				}
+			} else if ($comment_count > 0 && !empty($line) && strpos($line, '//') !== 0) {
 				break;
 			}
-		} else if ($comment_count > 0 && !empty($line) && strpos($line, '//') !== 0) {
-			// Si ya empezamos a contar comentarios y encontramos una línea que no es comentario, terminamos
-			break;
 		}
-	}
-	
-	// Si no se encuentra en comentarios de una línea, intentar con DocBlock
-	if ($comment_count < 3) {
-		if (preg_match('/\/\*\*\s*\n\s*\*\s*(.+?)\s*\n\s*\*\s*(.+?)\s*\n\s*\*\s*(.+?)\s*\n/s', $contents, $matches)) {
-			if (isset($matches[3])) {
-				$folder = trim($matches[3]);
+		if ($comment_count < 3) {
+			if (preg_match('/\/\*\*\s*\n\s*\*\s*(.+?)\s*\n\s*\*\s*(.+?)\s*\n\s*\*\s*(.+?)\s*\n/s', $contents, $matches)) {
+				if (isset($matches[3])) {
+					$folder = trim($matches[3]);
+				}
 			}
 		}
+		if (!in_array($folder, ['custom-elements', 'conditionals', 'dynamic-tags'])) {
+			return new WP_Error('invalid_folder', 'Carpeta no permitida en el tercer comentario. Debe ser una de: custom-elements, conditionals, dynamic-tags', ['status' => 400]);
+		}
+		$bricks_dir = flowtitude_get_custom_dir('bricks') . '/' . $folder;
+		if (!file_exists($bricks_dir)) {
+			wp_mkdir_p($bricks_dir);
+		}
+		$filename = sanitize_file_name($file['name']);
+		$destination = trailingslashit($bricks_dir) . $filename;
+		if (!move_uploaded_file($file['tmp_name'], $destination)) {
+			return new WP_Error('move_failed', 'Error al guardar el archivo.', ['status' => 500]);
+		}
+		return rest_ensure_response([
+			'success' => true,
+			'message' => 'Componente subido correctamente.',
+			'files' => [
+				['file' => $filename, 'folder' => $folder, 'status' => 'ok']
+			],
+			'errors' => []
+		]);
 	}
-
-	// Validar que la carpeta sea una de las permitidas
-	if (!in_array($folder, ['custom-elements', 'conditionals', 'dynamic-tags'])) {
-		return new WP_Error('invalid_folder', 'Carpeta no permitida en el tercer comentario. Debe ser una de: custom-elements, conditionals, dynamic-tags', ['status' => 400]);
+	elseif ($ext === 'zip') {
+		// --- Procesar ZIP ---
+		$zip = new ZipArchive();
+		$tmp = $file['tmp_name'];
+		if ($zip->open($tmp) !== true) {
+			return new WP_Error('invalid_zip', 'No se pudo abrir el archivo ZIP.', ['status' => 400]);
+		}
+		$ok = [];
+		$errors = [];
+		for ($i = 0; $i < $zip->numFiles; $i++) {
+			$entry = $zip->getNameIndex($i);
+			if (strtolower(pathinfo($entry, PATHINFO_EXTENSION)) !== 'php') {
+				$errors[] = ['file' => $entry, 'error' => 'No es un archivo PHP'];
+				continue;
+			}
+			$stream = $zip->getStream($entry);
+			if (!$stream) {
+				$errors[] = ['file' => $entry, 'error' => 'No se pudo leer el archivo del ZIP'];
+				continue;
+			}
+			$contents = stream_get_contents($stream);
+			fclose($stream);
+			if (strlen($contents) > 51200) {
+				$errors[] = ['file' => $entry, 'error' => 'Archivo demasiado grande (máx. 50KB)'];
+				continue;
+			}
+			if (preg_match('/(eval|base64_decode|shell_exec|system|exec)/i', $contents)) {
+				$errors[] = ['file' => $entry, 'error' => 'El archivo contiene funciones peligrosas'];
+				continue;
+			}
+			// Extraer carpeta destino
+			$folder = 'custom-elements';
+			$lines = explode("\n", $contents);
+			$comment_count = 0;
+			foreach ($lines as $line) {
+				$line = trim($line);
+				if (preg_match('/^\/\/\s*(.+)$/', $line, $matches)) {
+					$comment_count++;
+					if ($comment_count === 3) {
+						$folder = trim($matches[1]);
+						break;
+					}
+				} else if ($comment_count > 0 && !empty($line) && strpos($line, '//') !== 0) {
+					break;
+				}
+			}
+			if ($comment_count < 3) {
+				if (preg_match('/\/\*\*\s*\n\s*\*\s*(.+?)\s*\n\s*\*\s*(.+?)\s*\n\s*\*\s*(.+?)\s*\n/s', $contents, $matches)) {
+					if (isset($matches[3])) {
+						$folder = trim($matches[3]);
+					}
+				}
+			}
+			if (!in_array($folder, ['custom-elements', 'conditionals', 'dynamic-tags'])) {
+				$errors[] = ['file' => $entry, 'error' => 'Carpeta no permitida en el tercer comentario'];
+				continue;
+			}
+			$bricks_dir = flowtitude_get_custom_dir('bricks') . '/' . $folder;
+			if (!file_exists($bricks_dir)) {
+				wp_mkdir_p($bricks_dir);
+			}
+			$filename = sanitize_file_name(basename($entry));
+			$destination = trailingslashit($bricks_dir) . $filename;
+			// Guardar el archivo
+			if (file_put_contents($destination, $contents) === false) {
+				$errors[] = ['file' => $entry, 'error' => 'No se pudo guardar el archivo'];
+				continue;
+			}
+			$ok[] = ['file' => $filename, 'folder' => $folder, 'status' => 'ok'];
+		}
+		$zip->close();
+		return rest_ensure_response([
+			'success' => count($ok) > 0,
+			'message' => 'Procesamiento de ZIP finalizado.',
+			'files' => $ok,
+			'errors' => $errors
+		]);
 	}
-	
-	// Registrar información de depuración
-	error_log('Flowtitude: Subiendo componente Bricks a la carpeta: ' . $folder);
-
-	$bricks_dir = flowtitude_get_custom_dir('bricks') . '/' . $folder;
-	if (!file_exists($bricks_dir)) {
-		wp_mkdir_p($bricks_dir);
+	else {
+		return new WP_Error('invalid_type', 'Solo se permiten archivos PHP o ZIP.', ['status' => 400]);
 	}
-
-	$filename = sanitize_file_name($file['name']);
-	$destination = trailingslashit($bricks_dir) . $filename;
-
-	if (!move_uploaded_file($file['tmp_name'], $destination)) {
-		return new WP_Error('move_failed', 'Error al guardar el archivo.', ['status' => 500]);
-	}
-
-	return rest_ensure_response(['success' => true, 'message' => 'Componente subido correctamente.']);
 }
 
 // === FUNCIONES DE RUTAS ===
