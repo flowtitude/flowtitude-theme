@@ -28,35 +28,44 @@ window.Settings = {
 		});
 	},
 	methods: {
-		async saveSettings() {
+		async handleSettingChange() {
 			this.isSaving = true;
-
-			const res = await fetch('/wp-json/flowtitude/v1/settings', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-WP-Nonce': flowtitude_data.rest_nonce
-				},
-				body: JSON.stringify(this.settings)
-			});
-
-			const result = await res.json();
-			if (result.success) {
-				window.FlowtitudeNotify.show("Ajustes guardados correctamente.", 'success');
+			clearTimeout(this.saveTimeout);
+			try {
+				const res = await fetch('/wp-json/flowtitude/v1/settings', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'X-WP-Nonce': flowtitude_data.rest_nonce
+					},
+					body: JSON.stringify(this.settings)
+				});
+				const result = await res.json();
+				if (result.success) {
+					this.message = 'Cambios guardados correctamente';
+					// Si se ha cambiado la opción de mover el menú de Bricks, forzar recarga del menú lateral
+					if (typeof window.wp !== 'undefined' && window.wp && window.wp.admin && window.wp.admin.menu) {
+						if (typeof window.wp.admin.menu.refresh === 'function') {
+							window.wp.admin.menu.refresh();
+						}
+					} else {
+						// Fallback: recargar solo el menú lateral si existe
+						const adminMenu = document.getElementById('adminmenu');
+						if (adminMenu) {
+							adminMenu.innerHTML = '';
+							location.reload(); // Si no hay forma de recargar solo el menú, recarga la página
+						}
+					}
+				} else {
+					this.message = 'Error al guardar los cambios';
+				}
+			} catch (error) {
+				this.message = 'Error al guardar los cambios';
 			}
-
 			this.isSaving = false;
-		},
-		handleSettingChange() {
-			// Limpiar timeout anterior si existe
-			if (this.saveTimeout) {
-				clearTimeout(this.saveTimeout);
-			}
-
-			// Establecer nuevo timeout para guardar
 			this.saveTimeout = setTimeout(() => {
-				this.saveSettings();
-			}, 500); // 500ms de debounce
+				this.message = '';
+			}, 2000);
 		},
 		setOpenSection(section) {
 			this.openSection = this.openSection === section ? null : section;

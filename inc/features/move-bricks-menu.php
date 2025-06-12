@@ -9,21 +9,19 @@ function flowtitude_move_bricks_menu($menu_order) {
 	$options = get_option('flowtitude_settings', []);
 	if (empty($options['move_bricks_menu'])) return $menu_order;
 
-	// Aseguramos que la orden del menú existe
 	if (!$menu_order) return true;
 
-	foreach ($menu_order as $index => $item) {
-		if ($item === 'bricks') {
-			unset($menu_order[$index]);
-			$bricks_menu = $item;
-			break;
-		}
-	}
+	$bricks_index = array_search('bricks', $menu_order);
+	$flowtitude_index = array_search('flowtitude-settings', $menu_order);
 
-	// Añadir al final si se ha encontrado
-	if (isset($bricks_menu)) {
-		$menu_order[] = $bricks_menu;
-	}
+	if ($bricks_index === false || $flowtitude_index === false) return $menu_order;
+
+	// Quitar Bricks de su posición actual
+	unset($menu_order[$bricks_index]);
+	$menu_order = array_values($menu_order);
+
+	// Insertar Bricks justo después de Flowtitude
+	array_splice($menu_order, $flowtitude_index + 1, 0, ['bricks']);
 
 	return $menu_order;
 }
