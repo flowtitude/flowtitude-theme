@@ -9,7 +9,8 @@ window.UploadSnippet = {
 			snippets: [],
 			showNewFolderInput: false,
 			isLoading: false,
-			error: null
+			error: null,
+			result: null
 		};
 	},
 	created() {
@@ -168,7 +169,12 @@ window.UploadSnippet = {
 					body: formData
 				});
 				const result = await res.json();
-				this.showNotice(result.message || 'Snippet subido correctamente', 'success');
+				this.result = result;
+				if(result.success) {
+					this.showNotice(result.message || 'Snippet(s) subido(s) correctamente', 'success');
+				} else {
+					this.showNotice(result.message || 'Error al subir', 'error');
+				}
 				this.snippetFile = null;
 				this.loadSnippets();
 			} catch (e) {
@@ -268,11 +274,8 @@ window.UploadSnippet = {
 				</div>
 
 				<div class="flowtitude-form-group">
-					<label>Archivo PHP:</label>
-					<input type="file" 
-						accept=".php" 
-						class="input-file" 
-						@change="e => snippetFile = e.target.files[0]" />
+					<label>Archivo PHP o ZIP:</label>
+					<input type="file" accept=".php,.zip" class="input-file" @change="e => snippetFile = e.target.files[0]" />
 				</div>
 
 				<div style="margin-top: 1rem;">
@@ -283,6 +286,29 @@ window.UploadSnippet = {
 					</button>
 				</div>
 			</form>
+		</div>
+
+		<div v-if="result" style="margin-top:2rem;">
+			<h3>Resumen de la subida</h3>
+			<div v-if="result.files && result.files.length">
+				<p><strong>Instalados correctamente:</strong></p>
+				<ul>
+					<li v-for="f in result.files" :key="f.file">
+						✔️ {{ f.file }} <span v-if="f.folder">({{ f.folder }})</span>
+					</li>
+				</ul>
+			</div>
+			<div v-if="result.errors && result.errors.length">
+				<p><strong>Errores:</strong></p>
+				<ul>
+					<li v-for="e in result.errors" :key="e.file">
+						❌ {{ e.file }} — {{ e.error }}
+					</li>
+				</ul>
+			</div>
+			<div v-if="(!result.files || !result.files.length) && (!result.errors || !result.errors.length)">
+				<p>No se procesó ningún archivo.</p>
+			</div>
 		</div>
 
 		<h2 class="section-subtitle">Snippets existentes</h2>

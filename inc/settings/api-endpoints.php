@@ -490,19 +490,85 @@ function flowtitude_upload_snippet($request) {
 	$f = $request->get_file_params()['file'] ?? null;
 	if(!$f) return new WP_Error('no_file','No se recibió archivo',['status'=>400]);
 	$filename = preg_replace('/[^A-Za-z0-9\-_\.]/','',$f['name']);
-	if(strtolower(pathinfo($filename,PATHINFO_EXTENSION))!=='php')
-		return new WP_Error('invalid_ext','Solo .php',['status'=>400]);
+	$ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 	$folder = trim($request->get_param('folder') ?? '');
 	if($folder==='' || $folder==='/' || $folder==='.') $folder='custom';
 	$folder = preg_replace('/[^A-Za-z0-9\-_]/','',$folder);
-	$relative = ($folder ? $folder.'/' : '').$filename;
-	$dest = flowtitude_get_snippet_path($relative,false,false);
-	if(!$dest) return new WP_Error('bad_path','Ruta destino inválida',['status'=>400]);
-	if(is_wp_error($e = flowtitude_ensure_dir(dirname($dest)))) return $e;
-	if(!move_uploaded_file($f['tmp_name'],$dest))
-		return new WP_Error('upload_failed','move_uploaded_file falló',['status'=>500]);
-	flowtitude_debug_log("Snippet subido a $relative",'success');
-	return rest_ensure_response(['success'=>true]);
+
+	$max_size = 51200;
+	$ok = [];
+	$errors = [];
+
+	if($ext === 'php') {
+		if($f['size'] > $max_size) {
+			return new WP_Error('file_too_large', 'Archivo demasiado grande (máx. 50KB).', ['status' => 400]);
+		}
+		$contents = file_get_contents($f['tmp_name']);
+		if(preg_match('/(eval|base64_decode|shell_exec|system|exec)/i', $contents)) {
+			return new WP_Error('unsafe_code', 'El archivo contiene funciones peligrosas.', ['status' => 400]);
+		}
+		$relative = ($folder ? $folder.'/' : '').$filename;
+		$dest = flowtitude_get_snippet_path($relative,false,false);
+		if(!$dest) return new WP_Error('bad_path','Ruta destino inválida',['status'=>400]);
+		if(is_wp_error($e = flowtitude_ensure_dir(dirname($dest)))) return $e;
+		if(!move_uploaded_file($f['tmp_name'],$dest))
+			return new WP_Error('upload_failed','move_uploaded_file falló',['status'=>500]);
+		flowtitude_debug_log("Snippet subido a $relative",'success');
+		$ok[] = ['file' => $filename, 'folder' => $folder, 'status' => 'ok'];
+	} elseif($ext === 'zip') {
+		$zip = new ZipArchive();
+		$tmp = $f['tmp_name'];
+		if ($zip->open($tmp) !== true) {
+			return new WP_Error('invalid_zip', 'No se pudo abrir el archivo ZIP.', ['status' => 400]);
+		}
+		for ($i = 0; $i < $zip->numFiles; $i++) {
+			$entry = $zip->getNameIndex($i);
+			if (strtolower(pathinfo($entry, PATHINFO_EXTENSION)) !== 'php') {
+				$errors[] = ['file' => $entry, 'error' => 'No es un archivo PHP'];
+				continue;
+			}
+			$stream = $zip->getStream($entry);
+			if (!$stream) {
+				$errors[] = ['file' => $entry, 'error' => 'No se pudo leer el archivo del ZIP'];
+				continue;
+			}
+			$contents = stream_get_contents($stream);
+			fclose($stream);
+			if (strlen($contents) > $max_size) {
+				$errors[] = ['file' => $entry, 'error' => 'Archivo demasiado grande (máx. 50KB)'];
+				continue;
+			}
+			if (preg_match('/(eval|base64_decode|shell_exec|system|exec)/i', $contents)) {
+				$errors[] = ['file' => $entry, 'error' => 'El archivo contiene funciones peligrosas'];
+				continue;
+			}
+			$filename = sanitize_file_name(basename($entry));
+			$relative = ($folder ? $folder.'/' : '').$filename;
+			$dest = flowtitude_get_snippet_path($relative,false,false);
+			if(!$dest) {
+				$errors[] = ['file' => $entry, 'error' => 'Ruta destino inválida'];
+				continue;
+			}
+			if(is_wp_error($e = flowtitude_ensure_dir(dirname($dest)))) {
+				$errors[] = ['file' => $entry, 'error' => 'No se pudo crear el directorio'];
+				continue;
+			}
+			if(file_put_contents($dest, $contents) === false) {
+				$errors[] = ['file' => $entry, 'error' => 'No se pudo guardar el archivo'];
+				continue;
+			}
+			$ok[] = ['file' => $filename, 'folder' => $folder, 'status' => 'ok'];
+		}
+		$zip->close();
+	} else {
+		return new WP_Error('invalid_ext','Solo se permiten archivos PHP o ZIP',['status'=>400]);
+	}
+	return rest_ensure_response([
+		'success' => count($ok) > 0,
+		'message' => ($ext === 'zip') ? 'Procesamiento de ZIP finalizado.' : 'Snippet subido correctamente.',
+		'files' => $ok,
+		'errors' => $errors
+	]);
 }
 
 /**
