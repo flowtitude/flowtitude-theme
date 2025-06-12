@@ -25,11 +25,13 @@ window.Security = {
 				disable_upload_restrictions: false,
 				migration_mode: false,
 				plugins_to_deactivate: '',
+				development_mode: false,
 			},
 			migrationOldUrl: '',
 			migrationNewUrl: '',
 			showMigrationConfirm: false,
 			openSection: 'General', // Sección abierta por defecto
+			isSavingMode: false,
 		};
 	},
 	created() {
@@ -120,7 +122,25 @@ window.Security = {
 		},
 		setOpenSection(section) {
 			this.openSection = this.openSection === section ? null : section;
-		}
+		},
+		async onDevModeToggle() {
+			if (this.isSavingMode) return;
+			this.isSavingMode = true;
+			if (this.settings.development_mode) {
+				this.settings.migration_mode = false;
+			}
+			await this.handleToggle();
+			window.location.reload();
+		},
+		async onMigrationModeToggle() {
+			if (this.isSavingMode) return;
+			this.isSavingMode = true;
+			if (this.settings.migration_mode) {
+				this.settings.development_mode = false;
+			}
+			await this.handleToggle();
+			window.location.reload();
+		},
 	},
 	template: `
 		<div class="admin">
@@ -349,11 +369,21 @@ window.Security = {
 					</summary>
 					<div class="snippet-item">
 						<div class="snippet-info">
+							<div class="snippet-title">Activar modo desarrollo</div>
+							<div class="snippet-desc">Activa el modo desarrollo para mostrar avisos y deshabilitar la desactivación de plugins de producción.</div>
+						</div>
+						<label class="switch">
+							<input type="checkbox" v-model="settings.development_mode" @change="onDevModeToggle" :disabled="isSavingMode" />
+							<span class="slider"></span>
+						</label>
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
 							<div class="snippet-title">Activar modo de migración</div>
 							<div class="snippet-desc">Activa el modo migración para mostrar avisos y habilitar herramientas especiales de migración.</div>
 						</div>
 						<label class="switch">
-							<input type="checkbox" v-model="settings.migration_mode" @change="handleToggle" />
+							<input type="checkbox" v-model="settings.migration_mode" @change="onMigrationModeToggle" :disabled="isSavingMode" />
 							<span class="slider"></span>
 						</label>
 					</div>
@@ -362,7 +392,7 @@ window.Security = {
 							<div class="snippet-title">Desactivar plugins de producción</div>
 							<div class="snippet-desc">Introduce los slugs de los plugins a desactivar en entornos de desarrollo, uno por línea.</div>
 						</div>
-						<textarea v-model="settings.plugins_to_deactivate" @blur="handleToggle" placeholder="wordfence\nwp-rocket\nmailgun" style="min-width:260px; min-height:40px;"></textarea>
+						<textarea v-model="settings.plugins_to_deactivate" @blur="handleToggle" placeholder="wordfence\nwp-rocket\nmailgun" style="min-width:260px; min-height:40px;" :disabled="settings.development_mode"></textarea>
 					</div>
 					<div v-if="settings.migration_mode" class="snippet-item">
 						<div class="snippet-info">

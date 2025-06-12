@@ -640,6 +640,7 @@ add_action('rest_api_init', function () {
 				'disable_2fa' => false,
 				'disable_upload_restrictions' => false,
 				'migration_mode' => false,
+				'development_mode' => false,
 				'plugins_to_deactivate' => '',
 			];
 			$stored = get_option('flowtitude_security_settings', []);
@@ -681,6 +682,7 @@ add_action('rest_api_init', function () {
 				'disable_2fa' => !empty($params['disable_2fa']),
 				'disable_upload_restrictions' => !empty($params['disable_upload_restrictions']),
 				'migration_mode' => !empty($params['migration_mode']),
+				'development_mode' => !empty($params['development_mode']),
 				'plugins_to_deactivate' => isset($params['plugins_to_deactivate']) ? sanitize_textarea_field($params['plugins_to_deactivate']) : '',
 			];
 

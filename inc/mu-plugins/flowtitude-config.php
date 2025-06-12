@@ -135,17 +135,6 @@ if (!empty($opts['disable_upload_restrictions'])) {
 	}, 10, 4);
 }
 
-// Aviso de modo migración
-if (!empty($opts['migration_mode'])) {
-	add_action('admin_notices', function() {
-		echo '<div class="notice notice-warning"><p><strong>¡Modo migración activo!</strong> El sitio está en modo migración. Algunas funciones pueden estar limitadas.</p></div>';
-	});
-	add_action('wp_footer', function() {
-		if (current_user_can('manage_options')) {
-			echo '<div style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#f59e0b;color:#fff;padding:10px;text-align:center;font-weight:bold;">¡Modo migración activo! El sitio puede estar incompleto o en pruebas.</div>';
-		}
-	});
-}
 // Desactivar plugins de producción
 if (!empty($opts['plugins_to_deactivate'])) {
 	add_filter('option_active_plugins', function($plugins) use ($opts) {
@@ -157,6 +146,83 @@ if (!empty($opts['plugins_to_deactivate'])) {
 			return true;
 		});
 	});
+}
+
+// Badge en la admin bar (top), tanto en admin como en frontend si la barra está visible
+if (!empty($opts['migration_mode']) || !empty($opts['development_mode'])) {
+    error_log('Flowtitude: Entrando en bloque de badge/banners. migration_mode='.(empty($opts['migration_mode'])?'0':'1').', development_mode='.(empty($opts['development_mode'])?'0':'1'));
+    add_action('admin_bar_menu', function($wp_admin_bar) use ($opts) {
+        error_log('Flowtitude: Ejecutando admin_bar_menu para badge.');
+        if (!is_user_logged_in() || !current_user_can('manage_options')) { error_log('Flowtitude: No es admin o no logueado.'); return; }
+        $mode = !empty($opts['development_mode']) ? 'desarrollo' : 'migración';
+        $color = $mode === 'desarrollo' ? '#2563eb' : '#f59e0b';
+        $label = $mode === 'desarrollo' ? 'Modo desarrollo' : 'Migración activa';
+        error_log('Flowtitude: Añadiendo badge. Modo='.$mode.', Color='.$color.', Label='.$label);
+        $wp_admin_bar->add_node([
+            'id'    => 'flowtitude-mode-badge',
+            'title' => '<span class="flowtitude-mode-badge-inner">'.$label.'</span>',
+            'href'  => false,
+            'parent'=> 'top-secondary',
+            'meta'  => ['title' => 'Modo especial de Flowtitude']
+        ]);
+    }, 9999);
+    add_action('admin_head', function() use ($opts) {
+        error_log('Flowtitude: Ejecutando admin_head para badge.');
+        $mode = !empty($opts['development_mode']) ? 'desarrollo' : 'migración';
+        $color = $mode === 'desarrollo' ? '#2563eb' : '#f59e0b';
+        echo '<style>
+        #wp-admin-bar-flowtitude-mode-badge > .ab-item {
+            background: '.$color.' !important;
+            color: #fff !important;
+            border-radius: 0 !important;
+            font-weight: 600;
+            padding: 0 12px !important;
+            font-size: 13px !important;
+            display: flex;
+            align-items: center;
+            height: 32px !important;
+            min-height: 32px !important;
+            box-shadow: none;
+            opacity: 0.97;
+        }
+        #wp-admin-bar-flowtitude-mode-badge .ab-item:before { display: none; }
+        </style>';
+    }, 99);
+    add_action('wp_head', function() use ($opts) {
+        error_log('Flowtitude: Ejecutando wp_head para badge.');
+        if (!is_user_logged_in() || !current_user_can('manage_options')) { error_log('Flowtitude: No es admin o no logueado (frontend).'); return; }
+        $mode = !empty($opts['development_mode']) ? 'desarrollo' : 'migración';
+        $color = $mode === 'desarrollo' ? '#2563eb' : '#f59e0b';
+        echo '<style>
+        #wp-admin-bar-flowtitude-mode-badge > .ab-item {
+            background: '.$color.' !important;
+            color: #fff !important;
+            border-radius: 0 !important;
+            font-weight: 600;
+            padding: 0 12px !important;
+            font-size: 13px !important;
+            display: flex;
+            align-items: center;
+            height: 32px !important;
+            min-height: 32px !important;
+            box-shadow: none;
+            opacity: 0.97;
+        }
+        #wp-admin-bar-flowtitude-mode-badge .ab-item:before { display: none; }
+        </style>';
+    }, 99);
+    // Banner inferior solo en frontend, aún más pequeño y discreto
+    add_action('wp_footer', function() use ($opts) {
+        error_log('Flowtitude: Ejecutando wp_footer para banner inferior.');
+        if (is_admin()) { error_log('Flowtitude: Es admin, no mostrar banner inferior.'); return; }
+        if (!is_user_logged_in() || !current_user_can('manage_options')) { error_log('Flowtitude: No es admin o no logueado (footer).'); return; }
+        $mode = !empty($opts['development_mode']) ? 'desarrollo' : 'migración';
+        $color = $mode === 'desarrollo' ? '#2563eb' : '#f59e0b';
+        $label = $mode === 'desarrollo' ? 'Modo desarrollo activo' : 'Migración activa';
+        error_log('Flowtitude: Mostrando banner inferior. Modo='.$mode.', Color='.$color.', Label='.$label);
+        echo '<style>#flowtitude-mode-banner{position:fixed;bottom:0;left:0;right:0;z-index:9999;background:'.$color.';color:#fff;text-align:center;font-weight:500;font-size:11px;padding:1px 0;box-shadow:none;letter-spacing:0.1px;opacity:0.85;}@media (max-width:782px){#flowtitude-mode-banner{font-size:10px;padding:2px 0;}}</style>';
+        echo '<div id="flowtitude-mode-banner">'.$label.'</div>';
+    }, 99);
 }
 
 function define_if_not_set($const, $value) {
