@@ -8,14 +8,7 @@ function flowtitude_generate_placeholder($width = 900, $height = 500, $theme = '
 	$theme = $theme === 'light' ? 'light' : 'dark';
 
 	$bg_color     = $theme === 'dark' ? '#333333' : '#dedede';
-	$stroke_color = $theme === 'dark' ? '#444444' : '#efefef';
 	$icon_color   = $theme === 'dark' ? '#bbbbbb' : '#666666';
-
-	$lines = '';
-	$spacing = 100;
-	for ($i = -$width; $i < $width * 2; $i += $spacing) {
-		$lines .= "<path d='M$i 0 L" . ($i + $width) . " $height' />";
-	}
 
 	$icon_svg = "
 	<svg xmlns='http://www.w3.org/2000/svg' width='90' height='90' viewBox='0 0 256 256'>
@@ -27,15 +20,7 @@ function flowtitude_generate_placeholder($width = 900, $height = 500, $theme = '
 	header("Content-type: image/svg+xml");
 
 	echo '<svg width="' . $width . '" height="' . $height . '" viewBox="0 0 ' . $width . ' ' . $height . '" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">';
-	echo '<defs>';
-	echo '<pattern id="backgroundPattern" patternUnits="userSpaceOnUse" width="' . $width . '" height="' . $height . '">';
-	echo '<g fill="none" stroke="' . $stroke_color . '" stroke-width="3" stroke-opacity="1">';
-	echo $lines;
-	echo '</g>';
-	echo '</pattern>';
-	echo '</defs>';
 	echo '<rect width="100%" height="100%" fill="' . $bg_color . '" />';
-	echo '<rect width="100%" height="100%" fill="url(#backgroundPattern)" />';
 	echo '<foreignObject x="0" y="0" width="100%" height="100%">';
 	echo '<div xmlns="http://www.w3.org/1999/xhtml" style="position: relative; width: 100%; height: 100%; padding: 1rem;">';
 	echo '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90px; height: 90px;">' . $icon_svg . '</div>';
