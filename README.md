@@ -435,3 +435,77 @@ El panel de Seguridad ahora está organizado en **secciones colapsables** (igual
 
 Para dudas, soporte o sugerencias, contacta con el equipo de Flowtitude.
 
+## Características Principales
+
+### Integración Tailwind
+- Modo oscuro automático
+- Optimización de rendimiento con Intersection Observer
+- Capas CSS para WordPress y Bricks
+- Opciones para desencolar estilos por defecto
+
+### Optimizaciones de Rendimiento
+- Límites de memoria configurables
+- Desactivación de autoguardado
+- Límite de revisiones
+- Desactivación de transients
+- Caché de WordPress
+
+### Seguridad
+- Desactivación de REST API para visitantes
+- Ocultación de versión de WordPress
+- Desactivación de XML-RPC
+- Seguridad mejorada en login
+- Restricción por IP
+- Autenticación de dos factores
+
+### Herramientas de Desarrollo
+- Modo debug configurable
+- Registro de hooks y acciones
+- Modo desarrollo
+- Modo migración
+- Herramientas de reemplazo de URLs
+
+## Instalación
+
+1. Sube el tema a la carpeta `wp-content/themes/`
+2. Activa el tema desde el panel de WordPress
+3. Accede a "Flowtitude" en el menú de administración
+4. Configura las opciones según tus necesidades
+
+## Requisitos
+
+- WordPress 6.0 o superior
+- PHP 7.4 o superior
+- Bricks Builder (opcional, pero recomendado)
+
+## Configuración
+
+### Integración Tailwind
+- Activa el modo oscuro para el frontend
+- Configura las capas CSS para optimizar el rendimiento
+- Desencola los estilos por defecto que no necesites
+
+### Rendimiento
+- Ajusta los límites de memoria según tu servidor
+- Configura el límite de revisiones
+- Activa/desactiva el autoguardado
+- Gestiona los transients
+
+### Seguridad
+- Configura las restricciones de acceso
+- Activa las medidas de seguridad
+- Gestiona las IPs permitidas
+
+### Desarrollo
+- Activa el modo debug cuando sea necesario
+- Usa el modo desarrollo para pruebas
+- Utiliza las herramientas de migración con precaución
+
+## Soporte
+
+Para soporte y actualizaciones, visita [flowtitude.com](https://flowtitude.com)
+
+## Licencia
+
+Este tema está licenciado bajo GPL v2 o posterior.
+

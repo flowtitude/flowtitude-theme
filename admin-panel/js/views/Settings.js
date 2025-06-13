@@ -18,6 +18,8 @@ window.Settings = {
 				// Integración Tailwind
 				enable_dark_mode: false,
 				intersection_observer: false,
+				bricks_layer: false,
+				wp_layer: false,
 				remove_gutenberg_css: false,
 				remove_bricks_css: false,
 				remove_bricks_js: false,
@@ -208,7 +210,27 @@ window.Settings = {
 					</div>
 					<div class="snippet-item">
 						<div class="snippet-info">
-							<div class="snippet-title">Remover CSS de Gutenberg</div>
+							<div class="snippet-title">Encolar CSS de WordPress en capa</div>
+							<div class="snippet-desc">Carga los estilos de WordPress y plugins (incluyendo Gutenberg) en una capa CSS separada para mejor rendimiento.</div>
+						</div>
+						<label class="switch">
+							<input type="checkbox" v-model="settings.wp_layer" @change="handleSettingChange" />
+							<span class="slider"></span>
+						</label>
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Encolar CSS de Bricks en capa</div>
+							<div class="snippet-desc">Carga los estilos de Bricks en una capa CSS separada para mejor rendimiento.</div>
+						</div>
+						<label class="switch">
+							<input type="checkbox" v-model="settings.bricks_layer" @change="handleSettingChange" />
+							<span class="slider"></span>
+						</label>
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Desencolar CSS de Gutenberg</div>
 							<div class="snippet-desc">Elimina los estilos por defecto de Gutenberg para usar solo Tailwind.</div>
 						</div>
 						<label class="switch">
@@ -218,7 +240,7 @@ window.Settings = {
 					</div>
 					<div class="snippet-item">
 						<div class="snippet-info">
-							<div class="snippet-title">Remover CSS de Bricks</div>
+							<div class="snippet-title">Desencolar CSS de Bricks</div>
 							<div class="snippet-desc">Elimina los estilos por defecto de Bricks para usar solo Tailwind.</div>
 						</div>
 						<label class="switch">
@@ -228,7 +250,7 @@ window.Settings = {
 					</div>
 					<div class="snippet-item">
 						<div class="snippet-info">
-							<div class="snippet-title">Remover JS de Bricks</div>
+							<div class="snippet-title">Desencolar JS de Bricks</div>
 							<div class="snippet-desc">Elimina los scripts por defecto de Bricks para optimizar la carga.</div>
 						</div>
 						<label class="switch">
