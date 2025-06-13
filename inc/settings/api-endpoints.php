@@ -151,7 +151,11 @@ function flowtitude_save_settings($request) {
 		'bricks_layer'             => isset($params['bricks_layer']) ? !empty($params['bricks_layer']) : ($current['bricks_layer'] ?? false),
 		'wp_layer'                 => isset($params['wp_layer']) ? !empty($params['wp_layer']) : ($current['wp_layer'] ?? false),
 		'intersection_observer'    => isset($params['intersection_observer']) ? !empty($params['intersection_observer']) : ($current['intersection_observer'] ?? false),
-		'enable_dark_mode'         => isset($params['enable_dark_mode']) ? !empty($params['enable_dark_mode']) : ($current['enable_dark_mode'] ?? false)
+		'enable_dark_mode'         => isset($params['enable_dark_mode']) ? !empty($params['enable_dark_mode']) : ($current['enable_dark_mode'] ?? false),
+		// Nuevas opciones de memoria
+		'wp_memory_limit'          => isset($params['wp_memory_limit']) ? sanitize_text_field($params['wp_memory_limit']) : ($current['wp_memory_limit'] ?? '40M'),
+		'wp_max_memory_limit'      => isset($params['wp_max_memory_limit']) ? sanitize_text_field($params['wp_max_memory_limit']) : ($current['wp_max_memory_limit'] ?? '256M'),
+		'optimize_memory'          => isset($params['optimize_memory']) ? !empty($params['optimize_memory']) : ($current['optimize_memory'] ?? false),
 	];
  
 	// Guardar las preferencias

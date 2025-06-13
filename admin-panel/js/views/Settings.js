@@ -11,6 +11,9 @@ window.Settings = {
 				wp_layer: false,
 				intersection_observer: false,
 				enable_dark_mode: false,
+				wp_memory_limit: '40M',
+				wp_max_memory_limit: '256M',
+				optimize_memory: false,
 			},
 			message: '',
 			isSaving: false,
@@ -185,6 +188,37 @@ window.Settings = {
 								<span class="slider"></span>
 							</label>
 						</div>
+					</div>
+				</details>
+
+				<details class="toggle-section snippet-group" :open="openSection === 'Rendimiento'">
+					<summary @click.prevent="setOpenSection('Rendimiento')" style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
+						<span>Rendimiento</span>
+						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					</summary>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Límite de memoria de WordPress</div>
+							<div class="snippet-desc">Define el límite de memoria para WordPress. Ejemplo: 40M, 128M, 256M, 512M, 1G</div>
+						</div>
+						<input type="text" v-model="settings.wp_memory_limit" @blur="handleSettingChange" placeholder="40M" style="width: 100px;" />
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Límite máximo de memoria</div>
+							<div class="snippet-desc">Define el límite máximo de memoria para operaciones administrativas. Debe ser mayor que el límite normal.</div>
+						</div>
+						<input type="text" v-model="settings.wp_max_memory_limit" @blur="handleSettingChange" placeholder="256M" style="width: 100px;" />
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Optimización de memoria</div>
+							<div class="snippet-desc">Activa optimizaciones automáticas de memoria y limpieza de recursos no utilizados.</div>
+						</div>
+						<label class="switch">
+							<input type="checkbox" v-model="settings.optimize_memory" @change="handleSettingChange" />
+							<span class="slider"></span>
+						</label>
 					</div>
 				</details>
 

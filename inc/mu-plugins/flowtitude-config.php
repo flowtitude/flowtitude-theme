@@ -12,6 +12,48 @@ if (!defined('ABSPATH')) exit;
 if (!function_exists('get_option')) return;
 
 $opts = get_option('flowtitude_security_settings', []);
+$general_opts = get_option('flowtitude_settings', []);
+
+// Configuración de memoria
+if (!empty($general_opts['wp_memory_limit'])) {
+    $memory_limit = sanitize_text_field($general_opts['wp_memory_limit']);
+    if (preg_match('/^(\d+)([MG])$/', $memory_limit, $matches)) {
+        define_if_not_set('WP_MEMORY_LIMIT', $memory_limit);
+    }
+}
+
+if (!empty($general_opts['wp_max_memory_limit'])) {
+    $max_memory_limit = sanitize_text_field($general_opts['wp_max_memory_limit']);
+    if (preg_match('/^(\d+)([MG])$/', $max_memory_limit, $matches)) {
+        define_if_not_set('WP_MAX_MEMORY_LIMIT', $max_memory_limit);
+    }
+}
+
+// Optimización de memoria
+if (!empty($general_opts['optimize_memory'])) {
+    // Limpiar memoria después de operaciones pesadas
+    add_action('shutdown', function() {
+        if (function_exists('gc_collect_cycles')) {
+            gc_collect_cycles();
+        }
+    });
+
+    // Optimizar consultas a base de datos
+    add_filter('query', function($query) {
+        if (strpos($query, 'SELECT') === 0) {
+            $query = str_replace('SELECT', 'SELECT SQL_CALC_FOUND_ROWS', $query);
+        }
+        return $query;
+    });
+
+    // Desactivar carga de scripts innecesarios en el admin
+    add_action('admin_enqueue_scripts', function() {
+        if (!current_user_can('manage_options')) {
+            wp_dequeue_script('heartbeat');
+            wp_dequeue_script('autosave');
+        }
+    }, 99);
+}
 
 // Helper para definir constantes solo si no existen
 define_if_not_set('WP_DEBUG',         !empty($opts['wp_debug']));
