@@ -2,11 +2,16 @@ window.Security = {
 	data() {
 		return {
 			settings: {
+				// General
 				disable_wp_api: false,
 				hide_wp_version: false,
 				disable_xmlrpc: false,
 				secure_login: false,
-				// Opciones de debug
+				allowed_ips: '',
+				disable_2fa: false,
+				disable_upload_restrictions: false,
+
+				// Debug
 				wp_debug: false,
 				wp_debug_display: false,
 				wp_debug_log: false,
@@ -14,23 +19,17 @@ window.Security = {
 				script_debug: false,
 				savequeries: false,
 				disable_wp_cron: false,
-				wp_cache: false,
-				disable_transients: false,
-				disable_heartbeat: false,
-				disable_autosave: false,
-				revision_limit: 0,
 				log_hooks: false,
-				allowed_ips: '',
-				disable_2fa: false,
-				disable_upload_restrictions: false,
+
+				// Migraciones
 				migration_mode: false,
-				plugins_to_deactivate: '',
 				development_mode: false,
+				plugins_to_deactivate: '',
 			},
 			migrationOldUrl: '',
 			migrationNewUrl: '',
 			showMigrationConfirm: false,
-			openSection: 'General', // Sección abierta por defecto
+			openSection: 'General',
 			isSavingMode: false,
 		};
 	},
@@ -302,63 +301,6 @@ window.Security = {
 							<input type="checkbox" v-model="settings.log_hooks" @change="handleToggle" />
 							<span class="slider"></span>
 						</label>
-					</div>
-				</details>
-
-				<details class="toggle-section snippet-group" :open="openSection === 'Caché'">
-					<summary @click.prevent="setOpenSection('Caché')" style="display: flex; justify-content: space-between; align-items: center; font-weight: bold;">
-						<span>Caché y rendimiento</span>
-						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-					</summary>
-					<div class="snippet-item">
-						<div class="snippet-info">
-							<div class="snippet-title">Activar caché de objetos</div>
-							<div class="snippet-desc">Activa o desactiva la caché de objetos de WordPress. (WP_CACHE)</div>
-						</div>
-						<label class="switch">
-							<input type="checkbox" v-model="settings.wp_cache" @change="handleToggle" />
-							<span class="slider"></span>
-						</label>
-					</div>
-					<div class="snippet-item">
-						<div class="snippet-info" style="flex: 1 1 auto; min-width: 0;">
-							<div class="snippet-title">Desactivar generación de transients</div>
-							<div class="snippet-desc">Evita que WordPress y los plugins guarden nuevos transients en la base de datos. Puede afectar a algunas funcionalidades. Puedes limpiar los transients existentes manualmente.</div>
-						</div>
-						<div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 220px;">
-							<button class="btn btn-small" @click="clearTransients">Limpiar transients</button>
-							<label class="switch">
-								<input type="checkbox" v-model="settings.disable_transients" @change="handleToggle" />
-								<span class="slider"></span>
-							</label>
-						</div>
-					</div>
-					<div class="snippet-item">
-						<div class="snippet-info">
-							<div class="snippet-title">Desactivar Heartbeat API</div>
-							<div class="snippet-desc">Reduce las peticiones AJAX internas de WordPress, útil para ahorrar recursos en desarrollo.</div>
-						</div>
-						<label class="switch">
-							<input type="checkbox" v-model="settings.disable_heartbeat" @change="handleToggle" />
-							<span class="slider"></span>
-						</label>
-					</div>
-					<div class="snippet-item">
-						<div class="snippet-info">
-							<div class="snippet-title">Desactivar guardado automático</div>
-							<div class="snippet-desc">Evita que WordPress guarde borradores automáticamente mientras editas entradas o páginas.</div>
-						</div>
-						<label class="switch">
-							<input type="checkbox" v-model="settings.disable_autosave" @change="handleToggle" />
-							<span class="slider"></span>
-						</label>
-					</div>
-					<div class="snippet-item">
-						<div class="snippet-info">
-							<div class="snippet-title">Número máximo de revisiones por post</div>
-							<div class="snippet-desc">Limita cuántas revisiones se guardan por cada entrada o página. (0 para desactivar revisiones)</div>
-						</div>
-						<input type="number" v-model="settings.revision_limit" min="0" max="20" style="width: 80px;" @blur="handleToggle" />
 					</div>
 				</details>
 
