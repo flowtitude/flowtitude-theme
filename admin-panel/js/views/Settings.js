@@ -8,6 +8,7 @@ window.Settings = {
 				disable_autosave: false,
 				disable_transients: false,
 				wp_cache: false,
+				custom_dashboard_template: '',
 				
 				// Rendimiento
 				wp_memory_limit: '40M',
@@ -24,22 +25,57 @@ window.Settings = {
 				remove_bricks_css: false,
 				remove_bricks_js: false,
 			},
-			message: '',
 			isSaving: false,
 			saveTimeout: null,
 			openSection: 'General',
+			templates: [],
+			loading: false,
+			error: null,
+			bricksMessage: ''
 		};
 	},
-	created() {
-		fetch('/wp-json/flowtitude/v1/settings', {
-			headers: { 'X-WP-Nonce': flowtitude_data.rest_nonce }
-		})
-		.then(res => res.json())
-		.then(data => {
-			this.settings = { ...this.settings, ...data };
-		});
+	async created() {
+		await this.loadSettings();
 	},
 	methods: {
+		async loadSettings() {
+			try {
+				const response = await fetch('/wp-json/flowtitude/v1/settings', {
+					headers: { 'X-WP-Nonce': flowtitude_data.rest_nonce }
+				});
+				if (!response.ok) {
+					throw new Error('Error al cargar los ajustes');
+				}
+				const data = await response.json();
+				this.settings = { ...this.settings, ...data };
+				await this.loadBricksTemplates();
+			} catch (error) {
+				console.error('Settings: Error al cargar ajustes:', error);
+				this.error = error.message;
+			}
+		},
+		async loadBricksTemplates() {
+			try {
+				const response = await fetch('/wp-json/flowtitude/v1/bricks/templates', {
+					headers: { 
+						'X-WP-Nonce': flowtitude_data.rest_nonce,
+						'Accept': 'application/json'
+					}
+				});
+				if (!response.ok) {
+					const errorData = await response.json();
+					throw new Error(errorData.message || 'Error al cargar las plantillas');
+				}
+				const data = await response.json();
+				this.templates = data.templates || [];
+				this.bricksMessage = data.message || '';
+			} catch (error) {
+				console.error('Settings: Error al cargar plantillas:', error);
+				this.error = error.message;
+				this.templates = [];
+				this.bricksMessage = 'Error al cargar las plantillas de Bricks';
+			}
+		},
 		async handleSettingChange() {
 			this.isSaving = true;
 			clearTimeout(this.saveTimeout);
@@ -54,30 +90,14 @@ window.Settings = {
 				});
 				const result = await res.json();
 				if (result.success) {
-					this.message = 'Cambios guardados correctamente';
-					// Si se ha cambiado la opción de mover el menú de Bricks, forzar recarga del menú lateral
-					if (typeof window.wp !== 'undefined' && window.wp && window.wp.admin && window.wp.admin.menu) {
-						if (typeof window.wp.admin.menu.refresh === 'function') {
-							window.wp.admin.menu.refresh();
-						}
-					} else {
-						// Fallback: recargar solo el menú lateral si existe
-						const adminMenu = document.getElementById('adminmenu');
-						if (adminMenu) {
-							adminMenu.innerHTML = '';
-							location.reload(); // Si no hay forma de recargar solo el menú, recarga la página
-						}
-					}
+					window.FlowtitudeNotify.show('Cambios guardados correctamente', 'success');
 				} else {
-					this.message = 'Error al guardar los cambios';
+					window.FlowtitudeNotify.show('Error al guardar los cambios', 'error');
 				}
 			} catch (error) {
-				this.message = 'Error al guardar los cambios';
+				window.FlowtitudeNotify.show('Error al guardar los cambios', 'error');
 			}
 			this.isSaving = false;
-			this.saveTimeout = setTimeout(() => {
-				this.message = '';
-			}, 2000);
 		},
 		setOpenSection(section) {
 			this.openSection = this.openSection === section ? null : section;
@@ -85,7 +105,7 @@ window.Settings = {
 	},
 	template: `
 		<div class="admin">
-			<h1 class="section-title">Ajustes Generales</h1>
+			<h1 class="section-title">Ajustes</h1>
 
 			<div class="content-area">
 				<details class="toggle-section snippet-group" :open="openSection === 'General'">
@@ -93,6 +113,19 @@ window.Settings = {
 						<span>General</span>
 						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Plantilla personalizada del dashboard</div>
+							<div class="snippet-desc">Selecciona una plantilla de Bricks para usar como dashboard personalizado.</div>
+							<div v-if="bricksMessage" class="snippet-desc" style="color: #666; margin-top: 8px;">{{ bricksMessage }}</div>
+						</div>
+						<select v-model="settings.custom_dashboard_template" @change="handleSettingChange" :disabled="templates.length === 0">
+							<option value="">Seleccionar plantilla...</option>
+							<option v-for="template in templates" :key="template.id" :value="template.id">
+								{{ template.title }}
+							</option>
+						</select>
+					</div>
 					<div class="snippet-item">
 						<div class="snippet-info">
 							<div class="snippet-title">Mover menú de Bricks</div>
@@ -259,8 +292,6 @@ window.Settings = {
 						</label>
 					</div>
 				</details>
-
-				<p v-if="message" class="notice-popup show" :style="{ color: 'white' }">{{ message }}</p>
 			</div>
 		</div>
 	`

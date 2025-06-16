@@ -41,6 +41,18 @@ window.Security = {
 		.then(data => {
 			this.settings = { ...this.settings, ...data };
 		});
+
+		// Cargar plantillas de Bricks
+		fetch('/wp-json/flowtitude/v1/bricks/templates', {
+			headers: { 'X-WP-Nonce': flowtitude_data.rest_nonce }
+		})
+		.then(res => res.json())
+		.then(data => {
+			this.templates = data.templates || [];
+		})
+		.catch(error => {
+			console.error('Error al cargar plantillas:', error);
+		});
 	},
 	methods: {
 		async handleToggle() {

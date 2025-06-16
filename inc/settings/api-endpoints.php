@@ -84,6 +84,52 @@ add_action('rest_api_init', function () {
 		'callback' => 'flowtitude_delete_bricks_component',
 		'permission_callback' => fn() => current_user_can('manage_options'),
 	]);
+
+	// Endpoint para obtener plantillas de Bricks
+	register_rest_route('flowtitude/v1', '/bricks/templates', [
+		'methods' => 'GET',
+		'callback' => function () {
+			if (!current_user_can('manage_options')) {
+				return new WP_Error('forbidden', 'No tienes permisos para acceder a este endpoint', ['status' => 403]);
+			}
+
+			// Buscar plantillas de Bricks de tipo individual (content)
+			$args = [
+				'post_type'      => 'bricks_template',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'meta_query'     => [
+					[
+						'key'   => '_bricks_template_type',
+						'value' => 'content',
+						'compare' => '='
+					],
+				],
+				'orderby'        => 'title',
+				'order'          => 'ASC',
+			];
+			$query = new WP_Query($args);
+			error_log('Flowtitude: Encontradas ' . count($query->posts) . ' plantillas bricks_template (content).');
+			$templates = [];
+			foreach ($query->posts as $post) {
+				$meta = get_post_meta($post->ID, '_bricks_template_type', true);
+				error_log('Flowtitude: Post ID ' . $post->ID . ' - Title: ' . $post->post_title . ' - Meta: ' . $meta);
+				$templates[] = [
+					'id'    => $post->ID,
+					'title' => $post->post_title,
+				];
+			}
+
+			return rest_ensure_response([
+				'templates' => $templates
+			]);
+		},
+		'permission_callback' => function () {
+			return current_user_can('manage_options');
+		}
+	]);
+	
+	error_log('Flowtitude: Endpoint /bricks/templates registrado');
 });
 
 
