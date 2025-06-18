@@ -81,6 +81,9 @@ function flowtitude_display_custom_dashboard_metabox() {
 }
 
 function flowtitude_enqueue_bricks_assets_admin() {
+    $settings = get_option('flowtitude_settings', []);
+    $template_id = isset($settings['custom_dashboard_template']) ? intval($settings['custom_dashboard_template']) : 0;
+    if (!$template_id) return;
     // Solo en el dashboard principal
     $screen = get_current_screen();
     if ($screen && $screen->id === 'dashboard') {
@@ -108,6 +111,9 @@ add_action('admin_enqueue_scripts', 'flowtitude_enqueue_bricks_assets_admin');
  * Encola los estilos de Bricks y del admin de WordPress en capas CSS usando @layer, solo en el dashboard admin.
  */
 function flowtitude_enqueue_layered_admin_css() {
+    $settings = get_option('flowtitude_settings', []);
+    $template_id = isset($settings['custom_dashboard_template']) ? intval($settings['custom_dashboard_template']) : 0;
+    if (!$template_id) return;
     global $wp_styles;
     if (!isset($wp_styles) || !is_object($wp_styles)) return;
 

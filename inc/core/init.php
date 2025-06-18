@@ -25,8 +25,10 @@ if (function_exists('flowtitude_debug_log')) {
 }
 
 // === CARGA DE CARACTERÍSTICAS ===
+error_log('Flowtitude: Cargando custom-dashboard.php');
+require_once FLOWTITUDE_DIR . '/inc/features/custom-dashboard.php';
+error_log('Flowtitude: custom-dashboard.php cargado');
 
-// === CARGA DE CARACTERÍSTICAS ===
 /**
  * Carga condicional de módulos según los ajustes del usuario.
  * Se añade logging para trazabilidad y robustez.

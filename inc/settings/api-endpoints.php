@@ -93,7 +93,7 @@ add_action('rest_api_init', function () {
 				return new WP_Error('forbidden', 'No tienes permisos para acceder a este endpoint', ['status' => 403]);
 			}
 
-			// Buscar plantillas de Bricks de tipo individual (content)
+			// Buscar plantillas de Bricks de tipo section
 			$args = [
 				'post_type'      => 'bricks_template',
 				'post_status'    => 'publish',
@@ -101,7 +101,7 @@ add_action('rest_api_init', function () {
 				'meta_query'     => [
 					[
 						'key'   => '_bricks_template_type',
-						'value' => 'content',
+						'value' => 'section',
 						'compare' => '='
 					],
 				],
@@ -109,7 +109,7 @@ add_action('rest_api_init', function () {
 				'order'          => 'ASC',
 			];
 			$query = new WP_Query($args);
-			error_log('Flowtitude: Encontradas ' . count($query->posts) . ' plantillas bricks_template (content).');
+			error_log('Flowtitude: Encontradas ' . count($query->posts) . ' plantillas bricks_template (section).');
 			$templates = [];
 			foreach ($query->posts as $post) {
 				$meta = get_post_meta($post->ID, '_bricks_template_type', true);
@@ -202,6 +202,8 @@ function flowtitude_save_settings($request) {
 		'wp_memory_limit'          => isset($params['wp_memory_limit']) ? sanitize_text_field($params['wp_memory_limit']) : ($current['wp_memory_limit'] ?? '40M'),
 		'wp_max_memory_limit'      => isset($params['wp_max_memory_limit']) ? sanitize_text_field($params['wp_max_memory_limit']) : ($current['wp_max_memory_limit'] ?? '256M'),
 		'optimize_memory'          => isset($params['optimize_memory']) ? !empty($params['optimize_memory']) : ($current['optimize_memory'] ?? false),
+		// Añadido para dashboard personalizado
+		'custom_dashboard_template' => isset($params['custom_dashboard_template']) ? sanitize_text_field($params['custom_dashboard_template']) : ($current['custom_dashboard_template'] ?? ''),
 	];
  
 	// Guardar las preferencias
@@ -692,8 +694,10 @@ add_action('rest_api_init', function () {
 				'migration_mode' => false,
 				'development_mode' => false,
 				'plugins_to_deactivate' => '',
+				'dashboard_template_id' => '',
 			];
 			$stored = get_option('flowtitude_security_settings', []);
+			error_log('Flowtitude: Recuperando settings: ' . print_r(array_merge($defaults, (array) $stored), true));
 			return rest_ensure_response(array_merge($defaults, (array) $stored));
 		},
 		'permission_callback' => fn() => current_user_can('edit_theme_options'),
@@ -734,8 +738,10 @@ add_action('rest_api_init', function () {
 				'migration_mode' => !empty($params['migration_mode']),
 				'development_mode' => !empty($params['development_mode']),
 				'plugins_to_deactivate' => isset($params['plugins_to_deactivate']) ? sanitize_textarea_field($params['plugins_to_deactivate']) : '',
+				'dashboard_template_id' => isset($params['dashboard_template_id']) ? (string)sanitize_text_field($params['dashboard_template_id']) : '',
 			];
 
+			error_log('Flowtitude: Guardando settings: ' . print_r($sanitized, true));
 			update_option('flowtitude_security_settings', $sanitized);
 
 			return rest_ensure_response(['success' => true]);

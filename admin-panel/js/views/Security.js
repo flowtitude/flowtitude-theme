@@ -31,32 +31,45 @@ window.Security = {
 			showMigrationConfirm: false,
 			openSection: 'General',
 			isSavingMode: false,
+			templates: [],
 		};
 	},
 	created() {
+		console.log('Security component created');
 		fetch('/wp-json/flowtitude/v1/security', {
 			headers: { 'X-WP-Nonce': flowtitude_data.rest_nonce }
 		})
 		.then(res => res.json())
 		.then(data => {
+			console.log('Security settings loaded:', data);
+			console.log('Valor recuperado de dashboard_template_id:', data.dashboard_template_id);
 			this.settings = { ...this.settings, ...data };
 		});
 
 		// Cargar plantillas de Bricks
+		console.log('Fetching Bricks templates...');
 		fetch('/wp-json/flowtitude/v1/bricks/templates', {
 			headers: { 'X-WP-Nonce': flowtitude_data.rest_nonce }
 		})
-		.then(res => res.json())
+		.then(res => {
+			console.log('Bricks templates response status:', res.status);
+			return res.json();
+		})
 		.then(data => {
+			console.log('Bricks templates loaded:', data);
 			this.templates = data.templates || [];
 		})
 		.catch(error => {
-			console.error('Error al cargar plantillas:', error);
+			console.error('Error loading Bricks templates:', error);
 		});
 	},
 	methods: {
-		async handleToggle() {
+		async handleToggle(e) {
+			if (e && e.target && e.target.name === 'dashboard_template_id') {
+				console.log('Selector cambiado, nuevo valor:', this.settings.dashboard_template_id);
+			}
 			try {
+				console.log('Saving settings:', this.settings);
 				const response = await fetch('/wp-json/flowtitude/v1/security', {
 					method: 'POST',
 					headers: {
@@ -71,14 +84,13 @@ window.Security = {
 				}
 
 				const result = await response.json();
+				console.log('Save response:', result);
 				if (result.success) {
 					this.showNotice('Cambios guardados correctamente', 'success');
 				}
 			} catch (error) {
 				console.error('Error al guardar:', error);
 				this.showNotice(error.message, 'error');
-				// Revertir el cambio si hay error
-				this.settings.disable_wp_api = !this.settings.disable_wp_api;
 			}
 		},
 		showNotice(msg, type = 'info') {

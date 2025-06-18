@@ -35,11 +35,13 @@ window.Settings = {
 		};
 	},
 	async created() {
+		console.log('[Settings] Componente creado');
 		await this.loadSettings();
 	},
 	methods: {
 		async loadSettings() {
 			try {
+				console.log('[Settings] Cargando ajustes...');
 				const response = await fetch('/wp-json/flowtitude/v1/settings', {
 					headers: { 'X-WP-Nonce': flowtitude_data.rest_nonce }
 				});
@@ -47,10 +49,11 @@ window.Settings = {
 					throw new Error('Error al cargar los ajustes');
 				}
 				const data = await response.json();
+				console.log('[Settings] Ajustes recibidos:', data);
 				this.settings = { ...this.settings, ...data };
 				await this.loadBricksTemplates();
 			} catch (error) {
-				console.error('Settings: Error al cargar ajustes:', error);
+				console.error('[Settings] Error al cargar ajustes:', error);
 				this.error = error.message;
 			}
 		},
@@ -80,6 +83,7 @@ window.Settings = {
 			this.isSaving = true;
 			clearTimeout(this.saveTimeout);
 			try {
+				console.log('[Settings] Guardando ajustes:', this.settings);
 				const res = await fetch('/wp-json/flowtitude/v1/settings', {
 					method: 'POST',
 					headers: {
@@ -89,6 +93,7 @@ window.Settings = {
 					body: JSON.stringify(this.settings)
 				});
 				const result = await res.json();
+				console.log('[Settings] Respuesta al guardar:', result);
 				if (result.success) {
 					window.FlowtitudeNotify.show('Cambios guardados correctamente', 'success');
 				} else {
@@ -113,19 +118,6 @@ window.Settings = {
 						<span>General</span>
 						<svg class="caret" viewBox="0 0 20 20"><polyline points="6,8 10,12 14,8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 					</summary>
-					<div class="snippet-item">
-						<div class="snippet-info">
-							<div class="snippet-title">Plantilla personalizada del dashboard</div>
-							<div class="snippet-desc">Selecciona una plantilla de Bricks para usar como dashboard personalizado.</div>
-							<div v-if="bricksMessage" class="snippet-desc" style="color: #666; margin-top: 8px;">{{ bricksMessage }}</div>
-						</div>
-						<select v-model="settings.custom_dashboard_template" @change="handleSettingChange" :disabled="templates.length === 0">
-							<option value="">Seleccionar plantilla...</option>
-							<option v-for="template in templates" :key="template.id" :value="template.id">
-								{{ template.title }}
-							</option>
-						</select>
-					</div>
 					<div class="snippet-item">
 						<div class="snippet-info">
 							<div class="snippet-title">Mover menú de Bricks</div>
@@ -172,6 +164,22 @@ window.Settings = {
 							<input type="checkbox" v-model="settings.wp_cache" @change="handleSettingChange" />
 							<span class="slider"></span>
 						</label>
+					</div>
+					<div class="snippet-item">
+						<div class="snippet-info">
+							<div class="snippet-title">Plantilla personalizada del dashboard</div>
+							<div class="snippet-desc">
+								Selecciona una plantilla de Bricks para usar como dashboard personalizado. Si no seleccionas ninguna, se mostrará el dashboard por defecto.<br>
+								<strong>¿Qué hace esta opción?</strong> Si eliges una plantilla, el contenido de esa plantilla Bricks (tipo "section") reemplazará el dashboard estándar de WordPress para todos los administradores.
+							</div>
+							<div v-if="bricksMessage" class="snippet-desc" style="color: #666; margin-top: 8px;">{{ bricksMessage }}</div>
+						</div>
+						<select v-model="settings.custom_dashboard_template" @change="handleSettingChange" :disabled="templates.length === 0">
+							<option value="">Seleccionar plantilla...</option>
+							<option v-for="template in templates" :key="template.id" :value="template.id">
+								{{ template.title }}
+							</option>
+						</select>
 					</div>
 				</details>
 
