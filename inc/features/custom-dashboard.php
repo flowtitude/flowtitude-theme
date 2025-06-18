@@ -84,6 +84,9 @@ function flowtitude_enqueue_bricks_assets_admin() {
     // Solo en el dashboard principal
     $screen = get_current_screen();
     if ($screen && $screen->id === 'dashboard') {
+        // Encolar Tailwind desde uploads
+        $tailwind_url = content_url('uploads/windpress/cache/tailwind.css');
+        wp_enqueue_style('flowtitude-tailwind', $tailwind_url, [], null);
         // Forzar estilos y scripts de Bricks si existen
         if (wp_style_is('bricks-frontend', 'registered')) {
             wp_enqueue_style('bricks-frontend');
@@ -99,4 +102,46 @@ function flowtitude_enqueue_bricks_assets_admin() {
         }
     }
 }
-add_action('admin_enqueue_scripts', 'flowtitude_enqueue_bricks_assets_admin'); 
+add_action('admin_enqueue_scripts', 'flowtitude_enqueue_bricks_assets_admin');
+
+/**
+ * Encola los estilos de Bricks y del admin de WordPress en capas CSS usando @layer, solo en el dashboard admin.
+ */
+function flowtitude_enqueue_layered_admin_css() {
+    global $wp_styles;
+    if (!isset($wp_styles) || !is_object($wp_styles)) return;
+
+    $screen = get_current_screen();
+    if (!$screen || $screen->id !== 'dashboard') return;
+
+    $layers_order = '@layer wordpress-layer, plugins-layer, bricks-layer, theme, base, components, utilities, custom;';
+    $styles = $wp_styles->registered;
+    $first = true;
+
+    foreach ($styles as $key => $style) {
+        if (!is_string($style->src) || empty($style->src)) continue;
+        // Bricks
+        if (strpos($style->handle, 'bricks') !== false || strpos($style->src, 'bricks') !== false) {
+            $code = $first ? $layers_order . "\n" : '';
+            $first = false;
+            $code .= '@import url("' . esc_url($style->src) . '") layer(bricks-layer);';
+            $wp_styles->add_data($style->handle, 'after', [$code]);
+            $wp_styles->registered[$key]->src = '';
+        }
+        // Admin-bar y admin-menu → NO envolver en capa, encolar normal
+        elseif (in_array($style->handle, ['admin-bar', 'admin-menu']) ||
+            strpos($style->src, 'admin-bar') !== false || strpos($style->src, 'admin-menu') !== false) {
+            // No hacer nada, dejar que se encolen normalmente
+            continue;
+        }
+        // Otros estilos admin → capa wordpress-layer
+        elseif (strpos($style->handle, 'admin') !== false || strpos($style->src, 'admin') !== false) {
+            $code = $first ? $layers_order . "\n" : '';
+            $first = false;
+            $code .= '@import url("' . esc_url($style->src) . '") layer(wordpress-layer);';
+            $wp_styles->add_data($style->handle, 'after', [$code]);
+            $wp_styles->registered[$key]->src = '';
+        }
+    }
+}
+add_action('admin_enqueue_scripts', 'flowtitude_enqueue_layered_admin_css', 998); 
