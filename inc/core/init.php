@@ -17,6 +17,7 @@ if (!defined('FLOWTITUDE_DIR')) {
 require_once FLOWTITUDE_DIR . '/inc/settings/defaults.php';
 require_once FLOWTITUDE_DIR . '/inc/settings/api-endpoints.php';
 require_once FLOWTITUDE_DIR . '/inc/settings/snippet-folders-endpoint.php';
+require_once FLOWTITUDE_DIR . '/inc/core/layered-css.php';
 
 // === CARGA CONDICIONAL DE FUNCIONALIDADES ===
 $settings = get_option('flowtitude_settings', []);
