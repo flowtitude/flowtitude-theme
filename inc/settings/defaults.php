@@ -8,13 +8,7 @@ if (!defined('ABSPATH')) exit;
 function flowtitude_get_settings_defaults() {
 	return [
 		// Configuración general
-		'site_title' => get_bloginfo('name'),
-		'custom_message' => 'Bienvenido a Flowtitude',
 		'custom_dashboard_template' => '',
-		
-		// Colores
-		'primary_color' => '#1E40AF',
-		'secondary_color' => '#9333EA',
 		
 		// Características
 		'enable_feature' => false,

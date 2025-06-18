@@ -8,8 +8,9 @@ if (!defined('ABSPATH')) exit;
  * @param string $type Tipo de mensaje (info, debug, warning, success).
  */
 // Función de depuración
+if (!defined('FLOWTITUDE_LOG')) define('FLOWTITUDE_LOG', false); // Cambia a true para depuración avanzada
 function flowtitude_debug_log($message, $type = 'info') {
-	if (defined('WP_DEBUG') && WP_DEBUG) {
+	if ((defined('WP_DEBUG') && WP_DEBUG) && (defined('FLOWTITUDE_LOG') && FLOWTITUDE_LOG)) {
 		if (is_array($message) || is_object($message)) {
 			error_log('[Flowtitude ' . strtoupper($type) . '] ' . print_r($message, true));
 		} else {
