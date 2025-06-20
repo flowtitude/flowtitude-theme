@@ -1,0 +1,71 @@
+/**
+ * Capa CSS: WordPress Core
+ * 
+ * Esta capa contiene estilos específicos para WordPress Core.
+ * Se carga con prioridad baja para permitir que otros estilos la sobrescriban.
+ * 
+ * Orden de especificidad: wordpress-layer < plugins-layer < bricks < theme < custom
+ */
+
+/* Estilos base de WordPress */
+@layer wordpress-layer {
+  /* Reset básico para compatibilidad */
+  * {
+    box-sizing: border-box;
+  }
+  
+  /* Estilos para elementos de WordPress */
+  .wp-block {
+    max-width: 100%;
+  }
+  
+  /* Compatibilidad con Gutenberg */
+  .editor-styles-wrapper {
+    font-family: inherit;
+  }
+  
+  /* Estilos para widgets de WordPress */
+  .widget {
+    margin-bottom: 1rem;
+  }
+  
+  /* Estilos para navegación de WordPress */
+  .wp-navigation {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  /* Estilos para comentarios de WordPress */
+  .comment-list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  /* Estilos para paginación de WordPress */
+  .wp-pagenavi {
+    text-align: center;
+    margin: 2rem 0;
+  }
+  
+  /* Estilos para formularios de WordPress */
+  .wpcf7-form {
+    max-width: 100%;
+  }
+  
+  /* Estilos para shortcodes de WordPress */
+  .wp-shortcode {
+    display: block;
+  }
+  
+  /* Estilos para admin bar en frontend */
+  .admin-bar {
+    margin-top: 32px;
+  }
+  
+  @media (max-width: 782px) {
+    .admin-bar {
+      margin-top: 46px;
+    }
+  }
+} 

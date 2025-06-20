@@ -1,0 +1,181 @@
+/**
+ * Capa CSS: Custom
+ * 
+ * Esta capa contiene estilos personalizados del usuario.
+ * Se carga con la máxima prioridad para sobrescribir otros estilos.
+ * 
+ * Orden de especificidad: wordpress-layer < plugins-layer < bricks < theme < base < layouts < components < utilities < custom
+ */
+
+/* Estilos personalizados */
+@layer custom {
+  /* Aquí puedes añadir tus estilos personalizados */
+  /* Estos estilos tendrán la máxima prioridad */
+  
+  /* Ejemplo de estilos personalizados */
+  .custom-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+  }
+  
+  .custom-footer {
+    background: #333;
+    color: white;
+    padding: 2rem 0;
+    margin-top: 3rem;
+  }
+  
+  /* Estilos para modo oscuro */
+  .dark-mode {
+    background: #1a1a1a;
+    color: #ffffff;
+  }
+  
+  .dark-mode .card {
+    background: #2d2d2d;
+    border-color: #444;
+  }
+  
+  /* Estilos para animaciones personalizadas */
+  .fade-in {
+    animation: fadeIn 0.5s ease-in;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  .slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  
+  /* Estilos para componentes específicos */
+  .hero-section {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+  
+  .feature-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Estilos para formularios personalizados */
+  .custom-form {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .custom-form input,
+  .custom-form textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+  }
+  
+  .custom-form input:focus,
+  .custom-form textarea:focus {
+    border-color: #667eea;
+    outline: none;
+  }
+  
+  /* Estilos para navegación personalizada */
+  .custom-nav {
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1rem 0;
+  }
+  
+  .custom-nav ul {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 2rem;
+  }
+  
+  .custom-nav a {
+    color: #333;
+    font-weight: 500;
+    transition: color 0.3s ease;
+  }
+  
+  .custom-nav a:hover {
+    color: #667eea;
+  }
+  
+  /* Estilos responsivos personalizados */
+  @media (max-width: 768px) {
+    .custom-nav ul {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .hero-section {
+      min-height: 40vh;
+      padding: 2rem 1rem;
+    }
+    
+    .feature-card {
+      padding: 1.5rem;
+    }
+  }
+  
+  /* Estilos para estados especiales */
+  .loading {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  
+  .error {
+    color: #dc3545;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin: 1rem 0;
+  }
+  
+  .success {
+    color: #155724;
+    background: #d4edda;
+    border: 1px solid #c3e6cb;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin: 1rem 0;
+  }
+  
+  .warning {
+    color: #856404;
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin: 1rem 0;
+  }
+} 

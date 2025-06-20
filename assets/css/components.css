@@ -1,0 +1,32 @@
+/**
+ * Capa CSS: Components
+ * 
+ * Esta capa contiene estilos de componentes reutilizables.
+ * Se carga después de layouts pero antes de utilities.
+ */
+
+@layer components {
+  /* Componentes básicos */
+  .card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .button {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: #0073aa;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .button:hover {
+    background: #005a87;
+  }
+} 

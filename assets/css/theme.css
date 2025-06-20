@@ -1,0 +1,94 @@
+/**
+ * Capa CSS: Tema
+ * 
+ * Esta capa contiene estilos específicos del tema Flowtitude.
+ * Se carga después de Bricks pero antes de custom.
+ * 
+ * Orden de especificidad: wordpress-layer < plugins-layer < bricks < theme < custom
+ */
+
+/* Estilos del tema Flowtitude */
+@layer theme {
+  /* Variables CSS del tema */
+  :root {
+    --flowtitude-primary: #0073aa;
+    --flowtitude-secondary: #005a87;
+    --flowtitude-accent: #00a0d2;
+    --flowtitude-text: #333333;
+    --flowtitude-background: #ffffff;
+    --flowtitude-border: #dddddd;
+    --flowtitude-shadow: rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Estilos base del tema */
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: var(--flowtitude-text);
+    background: var(--flowtitude-background);
+  }
+  
+  /* Tipografía del tema */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 1rem;
+  }
+  
+  /* Enlaces del tema */
+  a {
+    color: var(--flowtitude-primary);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  
+  a:hover {
+    color: var(--flowtitude-secondary);
+  }
+  
+  /* Botones del tema */
+  .btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: var(--flowtitude-primary);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .btn:hover {
+    background: var(--flowtitude-secondary);
+  }
+  
+  /* Contenedores del tema */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  /* Utilidades del tema */
+  .text-center { text-align: center; }
+  .text-left { text-align: left; }
+  .text-right { text-align: right; }
+  
+  .mb-1 { margin-bottom: 0.25rem; }
+  .mb-2 { margin-bottom: 0.5rem; }
+  .mb-3 { margin-bottom: 1rem; }
+  .mb-4 { margin-bottom: 1.5rem; }
+  .mb-5 { margin-bottom: 3rem; }
+  
+  .mt-1 { margin-top: 0.25rem; }
+  .mt-2 { margin-top: 0.5rem; }
+  .mt-3 { margin-top: 1rem; }
+  .mt-4 { margin-top: 1.5rem; }
+  .mt-5 { margin-top: 3rem; }
+  
+  .p-1 { padding: 0.25rem; }
+  .p-2 { padding: 0.5rem; }
+  .p-3 { padding: 1rem; }
+  .p-4 { padding: 1.5rem; }
+  .p-5 { padding: 3rem; }
+} 

@@ -1,0 +1,37 @@
+/**
+ * Capa CSS: Utilities
+ * 
+ * Esta capa contiene clases de utilidad.
+ * Se carga después de components pero antes de custom.
+ */
+
+@layer utilities {
+  /* Utilidades de texto */
+  .text-center { text-align: center; }
+  .text-left { text-align: left; }
+  .text-right { text-align: right; }
+  
+  /* Utilidades de margen */
+  .m-0 { margin: 0; }
+  .m-1 { margin: 0.25rem; }
+  .m-2 { margin: 0.5rem; }
+  .m-3 { margin: 1rem; }
+  .m-4 { margin: 1.5rem; }
+  .m-5 { margin: 3rem; }
+  
+  /* Utilidades de padding */
+  .p-0 { padding: 0; }
+  .p-1 { padding: 0.25rem; }
+  .p-2 { padding: 0.5rem; }
+  .p-3 { padding: 1rem; }
+  .p-4 { padding: 1.5rem; }
+  .p-5 { padding: 3rem; }
+  
+  /* Utilidades de display */
+  .block { display: block; }
+  .inline { display: inline; }
+  .inline-block { display: inline-block; }
+  .flex { display: flex; }
+  .grid { display: grid; }
+  .hidden { display: none; }
+} 

@@ -1,0 +1,32 @@
+/**
+ * Capa CSS: Layouts
+ * 
+ * Esta capa contiene estilos de layout y estructura.
+ * Se carga después de base pero antes de components.
+ */
+
+@layer layouts {
+  /* Layouts básicos */
+  .layout-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+  
+  .layout-grid {
+    display: grid;
+    gap: 2rem;
+  }
+  
+  .layout-flex {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  /* Layouts responsivos */
+  @media (max-width: 768px) {
+    .layout-flex {
+      flex-direction: column;
+    }
+  }
+} 
