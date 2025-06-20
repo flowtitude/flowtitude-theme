@@ -1,7 +1,7 @@
 # 🌀 Flowtitude v2 - Tema Hijo WordPress con Panel de Administración Avanzado
 
-**Versión:** 1.0.0  
-**Última actualización:** 2025-03-21  
+**Versión:** 2.0.0  
+**Última actualización:** 2025-01-27  
 **Autor:** Ángel Julián
 
 ---
@@ -46,8 +46,8 @@ Flowtitude v2 es un **tema hijo para WordPress y Bricks Builder** que integra un
 
 ## 📋 Requisitos
 
-- WordPress 5.8 o superior
-- PHP 7.4 o superior
+- WordPress 6.0 o superior
+- PHP 8.0 o superior
 - Bricks Builder 1.5 o superior
 - WindPress (opcional, para integración con Tailwind)
 
@@ -57,6 +57,28 @@ Flowtitude v2 es un **tema hijo para WordPress y Bricks Builder** que integra un
 2. Descarga el tema y súbelo a `/wp-content/themes/`
 3. Activa el tema desde el panel de WordPress
 4. Ve a Apariencia > Flowtitude para acceder al panel de administración
+
+## 📊 Compatibilidad
+
+### Versiones Soportadas
+- **WordPress**: 6.0 - 6.4+ (recomendado: última versión estable)
+- **PHP**: 8.0 - 8.3+ (recomendado: 8.2 o superior)
+- **Bricks Builder**: 1.5+ (recomendado: última versión)
+- **WindPress**: 1.0+ (opcional, para Tailwind CSS)
+
+### Navegadores Soportados
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+
+### Plugins Compatibles
+- WooCommerce 7.0+
+- Contact Form 7 5.7+
+- Yoast SEO 20.0+
+- Elementor (si está activo)
+- ACF 6.0+
+- Jetpack 11.0+
 
 ---
 
@@ -128,17 +150,25 @@ Abre un issue en el repositorio o contacta al autor.
 
 ### Configuración Inicial
 
-1. **Snippets del Sistema**
+1. **Verificación de Requisitos**
+   - El tema verificará automáticamente PHP 8.0+ y WordPress 6.0+
+   - Se mostrarán avisos si no se cumplen los requisitos mínimos
+
+2. **Snippets del Sistema**
    - Los snippets base se activan automáticamente
    - Puedes gestionar los snippets desde el panel de Flowtitude > Snippets
 
-2. **Integración con Bricks**
+3. **Integración con Bricks**
    - Los componentes de Bricks se registran automáticamente
    - Verifica en Flowtitude > Bricks que los componentes estén activos
 
-3. **WindPress (opcional)**
+4. **WindPress (opcional)**
    - Si usas WindPress, activa la integración en Flowtitude > Home
    - La configuración de Tailwind se cargará automáticamente
+
+5. **Sistema de Capas CSS**
+   - El tema incluye un sistema completo de capas CSS
+   - Los estilos se organizan por prioridad: WordPress < Plugins < Bricks < Theme < Custom
 
 ### Verificación de la Instalación
 
@@ -148,15 +178,53 @@ Para verificar que todo está funcionando correctamente:
 2. Verifica que puedes acceder al panel de Flowtitude
 3. Comprueba que los snippets base están funcionando
 4. Si usas WindPress, verifica que Tailwind está activo
+5. Testea la edición con Bricks Builder
 
 ### Solución de Problemas
 
 Si encuentras algún problema:
 
-1. Verifica que cumples todos los requisitos
-2. Comprueba los permisos de escritura en `/wp-content/uploads/flowtitude/`
-3. Revisa el log de errores de WordPress
-4. Asegúrate de que no hay conflictos con otros plugins
+1. **Verificación de Requisitos**
+   - Asegúrate de tener PHP 8.0+ y WordPress 6.0+
+   - Verifica que Bricks Builder esté activo y actualizado
+
+2. **Problemas de CSS**
+   - Verifica que la carpeta `/assets/css/` existe
+   - Revisa la consola del navegador para errores 404
+   - Comprueba que el sistema de capas CSS está funcionando
+
+3. **Problemas del Panel de Administración**
+   - Verifica que Vue.js se está cargando correctamente
+   - Revisa la consola del navegador para errores JavaScript
+   - Comprueba los permisos de usuario (manage_options)
+
+4. **Problemas con Bricks**
+   - Asegúrate de que Bricks Builder esté activo
+   - Verifica que no hay conflictos con otros plugins
+   - Comprueba que los componentes de Bricks están registrados
+
+5. **Problemas de Rendimiento**
+   - Revisa los logs de WordPress para errores
+   - Verifica que no hay plugins conflictivos
+   - Comprueba la configuración del servidor
+
+6. **Problemas de Tailwind (si usas WindPress)**
+   - Verifica que WindPress esté activo y configurado
+   - Comprueba que el archivo `/uploads/windpress/cache/tailwind.css` existe
+   - Revisa la configuración de Tailwind en WindPress
+
+### Logs de Depuración
+
+El tema incluye un sistema de logging detallado. Para activarlo:
+
+1. Añade esto a tu `wp-config.php`:
+```php
+define('WP_DEBUG', true);
+define('WP_DEBUG_LOG', true);
+```
+
+2. Los logs se guardarán en `/wp-content/debug.log`
+3. Busca entradas con el prefijo "Flowtitude" para información específica del tema
 
 ## 💻 Uso
 
@@ -216,6 +284,8 @@ Para añadir un nuevo componente:
 ```
 flowtitude-v2/
 ├── admin-panel/         # Panel de administración
+├── assets/             # Recursos del tema
+│   └── css/           # Sistema de capas CSS
 ├── inc/                 # Funcionalidades principales
 │   ├── core/           # Núcleo del tema
 │   ├── features/       # Características adicionales
@@ -224,13 +294,43 @@ flowtitude-v2/
 ├── snippets/           # Snippets del sistema
 ```
 
+### Sistema de Capas CSS
+
+El tema utiliza un sistema de capas CSS moderno con `@layer` para organizar los estilos por prioridad:
+
+```css
+/* Orden de especificidad (de menor a mayor) */
+@layer wordpress-layer, plugins-layer, bricks, theme, base, layouts, components, utilities, custom;
+```
+
+**Capas disponibles:**
+- **wordpress-layer**: Estilos de WordPress Core
+- **plugins-layer**: Estilos de plugins
+- **bricks**: Estilos de Bricks Builder
+- **theme**: Estilos del tema Flowtitude
+- **base**: Estilos base y reset
+- **layouts**: Estilos de layout
+- **components**: Componentes reutilizables
+- **utilities**: Clases de utilidad
+- **custom**: Estilos personalizados (máxima prioridad)
+
 ### Creación de Componentes
+
 Los componentes de Bricks deben seguir esta estructura de comentarios:
 ```php
 // Título del Componente
 // Descripción del Componente
 // custom-elements|dynamic-tags|conditionals
 ```
+
+### Buenas Prácticas
+
+- Haz commits pequeños y descriptivos
+- Usa ramas para nuevas funcionalidades
+- Añade comentarios y PHPDoc en funciones complejas
+- Sigue las convenciones de WordPress y PSR-12
+- Respeta el orden de capas CSS al añadir estilos
+- Usa las variables CSS del tema para consistencia
 
 ## 🔒 Seguridad
 
@@ -265,6 +365,18 @@ flowtitude-v2/
 │   └── js/               # Scripts del panel
 │       ├── components/   # Componentes Vue
 │       └── views/       # Vistas del panel
+│
+├── assets/                   # Recursos del tema
+│   └── css/               # Sistema de capas CSS
+│       ├── wordpress.css  # Estilos de WordPress Core
+│       ├── plugins.css    # Estilos de plugins
+│       ├── bricks.css     # Estilos de Bricks Builder
+│       ├── theme.css      # Estilos del tema
+│       ├── base.css       # Estilos base y reset
+│       ├── layouts.css    # Estilos de layout
+│       ├── components.css # Componentes reutilizables
+│       ├── utilities.css  # Clases de utilidad
+│       └── custom.css     # Estilos personalizados
 │
 ├── inc/                    # Funcionalidades principales
 │   ├── core/            # Núcleo del tema
@@ -475,7 +587,7 @@ Para dudas, soporte o sugerencias, contacta con el equipo de Flowtitude.
 ## Requisitos
 
 - WordPress 6.0 o superior
-- PHP 7.4 o superior
+- PHP 8.0 o superior
 - Bricks Builder (opcional, pero recomendado)
 
 ## Configuración

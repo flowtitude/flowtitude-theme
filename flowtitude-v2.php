@@ -11,8 +11,8 @@ if (!defined('ABSPATH')) {
 if (!defined('FLOWTITUDE_DIR')) define('FLOWTITUDE_DIR', get_stylesheet_directory());
 if (!defined('FLOWTITUDE_URL')) define('FLOWTITUDE_URL', get_stylesheet_directory_uri());
 if (!defined('FLOWTITUDE_VERSION')) define('FLOWTITUDE_VERSION', '2.0.0');
-if (!defined('FLOWTITUDE_MIN_WP_VERSION')) define('FLOWTITUDE_MIN_WP_VERSION', '5.8');
-if (!defined('FLOWTITUDE_MIN_PHP_VERSION')) define('FLOWTITUDE_MIN_PHP_VERSION', '7.4');
+if (!defined('FLOWTITUDE_MIN_WP_VERSION')) define('FLOWTITUDE_MIN_WP_VERSION', '6.0');
+if (!defined('FLOWTITUDE_MIN_PHP_VERSION')) define('FLOWTITUDE_MIN_PHP_VERSION', '8.0');
 
 /**
  * Verifica los requisitos mínimos de PHP y WordPress para el tema.
