@@ -17,7 +17,7 @@ function flowtitude_maybe_remove_dashboard_widgets() {
         remove_meta_box('dashboard_site_health', 'dashboard', 'normal');
     }
 }
-add_action('wp_dashboard_setup', 'flowtitude_maybe_remove_dashboard_widgets');
+add_action('wp_dashboard_setup', 'flowtitude_maybe_remove_dashboard_widgets', 999);
 
 function flowtitude_maybe_add_dashboard_custom_metabox() {
     $settings = get_option('flowtitude_settings', []);
@@ -60,14 +60,35 @@ function flowtitude_display_custom_dashboard_metabox() {
             $frontend_head .= $bricks_inline_css;
             echo '
             <style>
+                /* Ocultar título y todos los avisos de la parte superior */
+                .wrap > h1,
+                .wrap > .notice,
+                .wrap > .error,
+                .wrap > .updated,
+                .wrap > .update-nag {
+                    display: none !important;
+                }
+
+                /* Corrección para alinear el icono del menú de Flowtitude */
+                #adminmenu .wp-menu-image img {
+                    padding: 9px 0 0 6px;
+                    opacity: .6;
+                }
+
+                /* Ocultar todos los demás widgets del dashboard excepto el nuestro */
+                .postbox-container .postbox:not(#flowtitude_custom_dashboard_metabox) {
+                    display: none !important;
+                }
+
+                /* Eliminar el borde del metabox contenedor */
+                #flowtitude_custom_dashboard_metabox {
+                    border: none !important;
+                    background: transparent !important;
+                }
+
                 .postbox-container { width: 100% !important; }
                 .postbox-header, #screen-meta-links { display: none; }
                 .inside { margin: 0 !important; padding: 0 !important; }
-                #wpcontent { padding-left: 0 !important; }
-                .wrap { margin: 0 !important; width: 100% !important; display: flex !important; flex-direction: column; overflow-x: hidden; }
-                #dashboard-widgets { padding: 0 !important; }
-                .wrap h1:first-of-type { display: none; }
-                .postbox { border: none !important; }
             </style>
             ';
         }
@@ -82,9 +103,15 @@ function flowtitude_display_custom_dashboard_metabox() {
 
 function flowtitude_enqueue_bricks_assets_admin() {
     $settings = get_option('flowtitude_settings', []);
-    $template_id = isset($settings['custom_dashboard_template']) ? intval($settings['custom_dashboard_template']) : 0;
-    if (!$template_id) return;
-    // Solo en el dashboard principal
+    // Condición reforzada: Asegurarse de que el template_id no solo existe, sino que es un post válido.
+    $template_id = !empty($settings['custom_dashboard_template']) ? (int)$settings['custom_dashboard_template'] : 0;
+
+    // Si no hay plantilla seleccionada, no hacer absolutamente nada.
+    if (empty($template_id)) {
+        return;
+    }
+
+    // Solo encolar si estamos en la pantalla del dashboard.
     $screen = get_current_screen();
     if ($screen && $screen->id === 'dashboard') {
         // Encolar Tailwind desde uploads
@@ -107,9 +134,12 @@ function flowtitude_enqueue_bricks_assets_admin() {
 }
 add_action('admin_enqueue_scripts', 'flowtitude_enqueue_bricks_assets_admin');
 
-/**
- * Encola los estilos de Bricks y del admin de WordPress en capas CSS usando @layer, solo en el dashboard admin.
- */
+/*
+ * Se comenta el siguiente bloque de código porque causaba la carga incondicional
+ * de hojas de estilo del frontend en el backend, rompiendo la UI del admin.
+ * La única función que debe manejar los assets del dashboard es
+ * flowtitude_enqueue_bricks_assets_admin(), que ya tiene la lógica correcta.
+
 function flowtitude_enqueue_layered_admin_css() {
     $settings = get_option('flowtitude_settings', []);
     $template_id = isset($settings['custom_dashboard_template']) ? intval($settings['custom_dashboard_template']) : 0;
@@ -157,4 +187,6 @@ add_action('admin_enqueue_scripts', function() {
             $wp_styles->registered[$key]->src = '';
         }
     }
-}, 100); 
+}, 100);
+
+*/ 

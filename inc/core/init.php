@@ -26,9 +26,13 @@ if (function_exists('flowtitude_debug_log')) {
 }
 
 // === CARGA DE CARACTERÍSTICAS ===
-error_log('Flowtitude: Cargando custom-dashboard.php');
-require_once FLOWTITUDE_DIR . '/inc/features/custom-dashboard.php';
-error_log('Flowtitude: custom-dashboard.php cargado');
+// Se comprueba si el archivo existe antes de intentar cargarlo para evitar errores fatales.
+$custom_dashboard_file = FLOWTITUDE_DIR . '/inc/features/custom-dashboard.php';
+if (file_exists($custom_dashboard_file)) {
+	error_log('Flowtitude: Cargando custom-dashboard.php');
+	require_once $custom_dashboard_file;
+	error_log('Flowtitude: custom-dashboard.php cargado');
+}
 
 /**
  * Carga condicional de módulos según los ajustes del usuario.

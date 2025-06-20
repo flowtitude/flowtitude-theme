@@ -6,6 +6,11 @@ if (!defined('ABSPATH')) exit;
  * @param string $context Sufijo para distinguir el contexto (ej: 'dashboard', 'frontend')
  */
 function flowtitude_enqueue_layered_css($context = 'frontend') {
+    // >> Condición de seguridad: No ejecutar nunca en el panel de administración.
+    if (is_admin()) {
+        return;
+    }
+
     global $wp_styles;
     if (!isset($wp_styles) || !is_object($wp_styles)) return;
     $layers_order = '@layer wordpress-layer, plugins-layer, bricks, theme, base, layouts, components, utilities, custom;';

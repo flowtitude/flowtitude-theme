@@ -141,14 +141,13 @@ if (flowtitude_check_requirements()) {
      *
      * @return void
      */
-    function flowtitude_enqueue_styles() {
-        wp_enqueue_style('flowtitude-style', get_stylesheet_uri(), [], FLOWTITUDE_VERSION);
-        if (function_exists('flowtitude_debug_log')) {
-            flowtitude_debug_log('Estilos principales encolados.', 'info');
+    function flowtitude_enqueue_assets() {
+        // Solo encolar los estilos principales en el frontend.
+        if (!is_admin()) {
+            wp_enqueue_style('flowtitude-style', get_stylesheet_uri(), [], FLOWTITUDE_VERSION);
         }
     }
-    add_action('wp_enqueue_scripts', 'flowtitude_enqueue_styles');
-    add_action('admin_enqueue_scripts', 'flowtitude_enqueue_styles');
+    add_action('wp_enqueue_scripts', 'flowtitude_enqueue_assets');
 }
 
 // Puedes seguir añadiendo módulos con esta estructura:

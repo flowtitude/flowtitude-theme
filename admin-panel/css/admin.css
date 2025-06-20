@@ -905,3 +905,10 @@ input[type="color"] {
 .toggle-section.snippet-group > summary .caret {
   stroke-width: 1 !important;
 }
+
+/* ==========================================================================
+   #APP
+   ========================================================================== */
+[v-cloak] {
+    display: none;
+}
