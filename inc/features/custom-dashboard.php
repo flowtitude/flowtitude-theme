@@ -40,38 +40,46 @@ function flowtitude_maybe_add_dashboard_custom_metabox() {
 }
 add_action('wp_dashboard_setup', 'flowtitude_maybe_add_dashboard_custom_metabox');
 
-
-// Start of Selection
 function flowtitude_display_custom_dashboard_metabox() {
     $settings = get_option('flowtitude_settings', []);
     $template_id = isset($settings['custom_dashboard_template']) ? intval($settings['custom_dashboard_template']) : 0;
     if ($template_id) {
+        ob_start();
+        do_action('wp_head');
+        $frontend_head = ob_get_clean();
+        ob_start();
+        wp_print_styles();
+        wp_print_scripts();
+        $extra_resources = ob_get_clean();
+        ob_start();
+        do_action('wp_footer');
+        $frontend_footer = ob_get_clean();
+        echo $frontend_head . $extra_resources;
         echo do_shortcode('[bricks_template id="' . $template_id . '"]');
+        echo $frontend_footer;
     }
 }
 
 function flowtitude_enqueue_bricks_assets_admin() {
-    $settings = get_option('flowtitude_settings', []);
-    // Condición reforzada: Asegurarse de que el template_id no solo existe, sino que es un post válido.
-    $template_id = !empty($settings['custom_dashboard_template']) ? (int)$settings['custom_dashboard_template'] : 0;
-
-    // Si no hay plantilla seleccionada, no hacer absolutamente nada.
-    if (empty($template_id)) {
-        return;
-    }
-
-    // Solo encolar si estamos en la pantalla del dashboard.
     $screen = get_current_screen();
     if ($screen && $screen->id === 'dashboard') {
+        // Verificar si estamos usando la plantilla de Bricks
+        $settings = get_option('flowtitude_settings', []);
+        $template_id = !empty($settings['custom_dashboard_template']) ? (int)$settings['custom_dashboard_template'] : 0;
+
+        if ($template_id) {
+            // Listar todos los handles de estilos encolados
+            global $wp_styles;
+            error_log('Estilos encolados: ' . implode(', ', $wp_styles->queue));
+        }
+
         // Encolar Tailwind desde uploads
         $tailwind_url = content_url('uploads/windpress/cache/tailwind.css');
         wp_enqueue_style('flowtitude-tailwind', $tailwind_url, [], null);
-        // Forzar estilos y scripts de Bricks si existen
+
+        // Forzar estilos y scripts de Bricks
         if (wp_style_is('bricks-frontend', 'registered')) {
             wp_enqueue_style('bricks-frontend');
-        }
-        if (wp_style_is('bricks-frontend-inline-inline-css', 'registered')) {
-            wp_enqueue_style('bricks-frontend-inline-inline-css');
         }
         if (wp_script_is('bricks-frontend', 'registered')) {
             wp_enqueue_script('bricks-frontend');
@@ -80,10 +88,33 @@ function flowtitude_enqueue_bricks_assets_admin() {
             wp_enqueue_script('bricks-frontend-inline');
         }
 
-        wp_enqueue_style('flowtitude-dashboard-style', get_stylesheet_directory_uri() . '/admin-panel/css/dashboard-fixes.css', [], '1.0');
+        // Cargar el archivo de correcciones para la UI del admin.
+        $fixes_file_path = get_stylesheet_directory() . '/admin-panel/css/dashboard-fixes.css';
+        if (file_exists($fixes_file_path)) {
+            wp_enqueue_style(
+                'flowtitude-dashboard-fixes',
+                get_stylesheet_directory_uri() . '/admin-panel/css/dashboard-fixes.css',
+                ['flowtitude-tailwind', 'bricks-frontend'], // Asegurar que se cargue después
+                filemtime($fixes_file_path)
+            );
+        }
+
+        // Encolar admin-menu.min.css desde el directorio wp-admin
+        wp_enqueue_style('admin-menu-styles', admin_url('css/admin-menu.min.css'), [], null);
     }
 }
 add_action('admin_enqueue_scripts', 'flowtitude_enqueue_bricks_assets_admin');
 
-// Encolar nuestra hoja de estilos para correcciones visuales
-wp_enqueue_style('flowtitude-dashboard-fixes', get_theme_file_uri('admin-panel/css/dashboard-fixes.css'), [], time());
+function remover_common_css_en_dashboard($hook_suffix) {
+    // Solo aplicar en la pantalla principal del Escritorio (admin index.php)
+    if ($hook_suffix === 'index.php') {
+        $settings = get_option('flowtitude_settings', []);
+        $template_id = !empty($settings['custom_dashboard_template']) ? (int)$settings['custom_dashboard_template'] : 0;
+
+        if ($template_id) {
+            wp_dequeue_style('common');       // Desencolar el estilo common.css
+            wp_deregister_style('common');    // (Opcional) Desregistrarlo completamente
+        }
+    }
+}
+add_action('admin_enqueue_scripts', 'remover_common_css_en_dashboard', 100); 
