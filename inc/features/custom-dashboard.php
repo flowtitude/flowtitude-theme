@@ -40,64 +40,13 @@ function flowtitude_maybe_add_dashboard_custom_metabox() {
 }
 add_action('wp_dashboard_setup', 'flowtitude_maybe_add_dashboard_custom_metabox');
 
+
+// Start of Selection
 function flowtitude_display_custom_dashboard_metabox() {
     $settings = get_option('flowtitude_settings', []);
     $template_id = isset($settings['custom_dashboard_template']) ? intval($settings['custom_dashboard_template']) : 0;
     if ($template_id) {
-        // Renderiza el shortcode de Bricks
-        remove_action('wp_head', 'wp_admin_bar_header');
-        ob_start();
-        do_action('wp_head');
-        $frontend_head = ob_get_clean();
-        ob_start();
-        wp_print_styles();
-        wp_print_scripts();
-        $extra_resources = ob_get_clean();
-        if (false === strpos($frontend_head, "bricks-frontend-inline-inline-css")) {
-            ob_start();
-            wp_print_styles('bricks-frontend-inline-inline-css');
-            $bricks_inline_css = ob_get_clean();
-            $frontend_head .= $bricks_inline_css;
-            echo '
-            <style>
-                /* Ocultar título y todos los avisos de la parte superior */
-                .wrap > h1,
-                .wrap > .notice,
-                .wrap > .error,
-                .wrap > .updated,
-                .wrap > .update-nag {
-                    display: none !important;
-                }
-
-                /* Corrección para alinear el icono del menú de Flowtitude */
-                #adminmenu .wp-menu-image img {
-                    padding: 9px 0 0 6px;
-                    opacity: .6;
-                }
-
-                /* Ocultar todos los demás widgets del dashboard excepto el nuestro */
-                .postbox-container .postbox:not(#flowtitude_custom_dashboard_metabox) {
-                    display: none !important;
-                }
-
-                /* Eliminar el borde del metabox contenedor */
-                #flowtitude_custom_dashboard_metabox {
-                    border: none !important;
-                    background: transparent !important;
-                }
-
-                .postbox-container { width: 100% !important; }
-                .postbox-header, #screen-meta-links { display: none; }
-                .inside { margin: 0 !important; padding: 0 !important; }
-            </style>
-            ';
-        }
-        ob_start();
-        do_action('wp_footer');
-        $frontend_footer = ob_get_clean();
-        echo $frontend_head . $extra_resources;
         echo do_shortcode('[bricks_template id="' . $template_id . '"]');
-        echo $frontend_footer;
     }
 }
 
@@ -130,63 +79,11 @@ function flowtitude_enqueue_bricks_assets_admin() {
         if (wp_script_is('bricks-frontend-inline', 'registered')) {
             wp_enqueue_script('bricks-frontend-inline');
         }
+
+        wp_enqueue_style('flowtitude-dashboard-style', get_stylesheet_directory_uri() . '/admin-panel/css/dashboard-fixes.css', [], '1.0');
     }
 }
 add_action('admin_enqueue_scripts', 'flowtitude_enqueue_bricks_assets_admin');
 
-/*
- * Se comenta el siguiente bloque de código porque causaba la carga incondicional
- * de hojas de estilo del frontend en el backend, rompiendo la UI del admin.
- * La única función que debe manejar los assets del dashboard es
- * flowtitude_enqueue_bricks_assets_admin(), que ya tiene la lógica correcta.
-
-function flowtitude_enqueue_layered_admin_css() {
-    $settings = get_option('flowtitude_settings', []);
-    $template_id = isset($settings['custom_dashboard_template']) ? intval($settings['custom_dashboard_template']) : 0;
-    if (!$template_id) return;
-    $screen = get_current_screen();
-    if (!$screen || $screen->id !== 'dashboard') return;
-    flowtitude_enqueue_layered_css('dashboard');
-}
-add_action('admin_enqueue_scripts', 'flowtitude_enqueue_layered_admin_css', 998);
-
-add_action('admin_enqueue_scripts', function() {
-    $screen = get_current_screen();
-    if ($screen && $screen->id === 'dashboard') {
-        $tailwind_url = content_url('uploads/windpress/cache/tailwind.css');
-        wp_enqueue_style('flowtitude-tailwind', $tailwind_url, [], null);
-    }
-}, 1);
-
-add_action('admin_enqueue_scripts', function() {
-    $screen = get_current_screen();
-    if ($screen && $screen->id === 'dashboard') {
-        global $wp_styles;
-        if (!isset($wp_styles) || !is_object($wp_styles)) return;
-
-        $layers_order = '@layer wordpress-layer, plugins-layer, bricks, theme, base, layouts, components, utilities, custom;';
-        $first = true;
-
-        foreach ($wp_styles->registered as $key => $style) {
-            // Solo afecta a los estilos de admin-bar y admin-menu
-            if (
-                !is_string($style->src) || empty($style->src) ||
-                (
-                    strpos($style->handle, 'admin-bar') === false &&
-                    strpos($style->handle, 'admin-menu') === false &&
-                    strpos($style->src, 'admin-bar.css') === false &&
-                    strpos($style->src, 'admin-menu.css') === false
-                )
-            ) {
-                continue;
-            }
-            $code = $first ? $layers_order . "\n" : '';
-            $first = false;
-            $code .= '@import url("' . esc_url($style->src) . '") layer(custom);';
-            $wp_styles->add_data($style->handle, 'after', [$code]);
-            $wp_styles->registered[$key]->src = '';
-        }
-    }
-}, 100);
-
-*/ 
+// Encolar nuestra hoja de estilos para correcciones visuales
+wp_enqueue_style('flowtitude-dashboard-fixes', get_theme_file_uri('admin-panel/css/dashboard-fixes.css'), [], time());

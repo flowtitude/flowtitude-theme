@@ -1,0 +1,40 @@
+#adminmenumain,
+#adminmenu {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif !important;
+}
+
+#adminmenu a {
+    text-decoration: none !important;
+}
+
+.collapse-button-label {
+    font-size: 14px !important;
+}
+.wrap > h1,
+.wrap > .notice,
+.wrap > .error,
+.wrap > .updated,
+.wrap > .update-nag {
+    display: none !important;
+}
+
+/* Corrección para alinear el icono del menú de Flowtitude */
+#adminmenu .wp-menu-image img {
+    padding: 9px 0 0 6px;
+    opacity: .6;
+}
+
+/* Ocultar todos los demás widgets del dashboard excepto el nuestro */
+.postbox-container .postbox:not(#flowtitude_custom_dashboard_metabox) {
+    display: none !important;
+}
+
+/* Eliminar el borde del metabox contenedor */
+#flowtitude_custom_dashboard_metabox {
+    border: none !important;
+    background: transparent !important;
+}
+
+.postbox-container { width: 100% !important; }
+.postbox-header, #screen-meta-links { display: none; }
+.inside { margin: 0 !important; padding: 0 !important; }
