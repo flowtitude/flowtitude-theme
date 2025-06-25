@@ -17,7 +17,7 @@ function flowtitude_enqueue_bricks_layer_css() {
 		return;
 	}
 
-	$layers_order = '@layer wordpress-layer, plugins-layer, bricks-layer, theme, base, components, utilities, custom;';
+	$layers_order = '@layer reset, wordpres, bricks, theme, base, layouts, components, utilities, custom;';
 
 	$styles = $wp_styles->registered;
 	$first = true;
@@ -35,7 +35,7 @@ function flowtitude_enqueue_bricks_layer_css() {
 		$code = $first ? $layers_order . "\n" : '';
 		$first = false;
 
-		$code .= '@import url("' . esc_url($style->src) . '") layer(bricks-layer);';
+		$code .= '@import url("' . esc_url($style->src) . '") layer(bricks);';
 
 		$wp_styles->add_data($style->handle, 'after', [$code]);
 		$wp_styles->registered[$key]->src = '';
