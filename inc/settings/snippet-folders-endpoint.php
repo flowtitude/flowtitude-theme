@@ -33,6 +33,19 @@ if (!function_exists('flowtitude_get_custom_dir')) {
     }
 }
 
+// Helper para validar nombres de carpetas de snippets
+if (!function_exists('flowtitude_validate_folder_name')) {
+    function flowtitude_validate_folder_name($name) {
+        if (!is_string($name) || empty($name)) return false;
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $name)) return false;
+        if ($name === '.' || $name === '..' || strpos($name, '/') !== false || strpos($name, '\\') !== false) return false;
+        if (preg_match('/[\\/:*?"<>|]/', $name)) return false;
+        $reserved_names = ['utils', '.DS_Store', 'node_modules', '.git'];
+        if (in_array(strtolower($name), $reserved_names)) return false;
+        return true;
+    }
+}
+
 // Añadir manejo de errores global para este archivo
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
     if (function_exists('flowtitude_debug_log')) {
@@ -68,10 +81,7 @@ add_action('rest_api_init', function () {
             'folder_name' => [
                 'required' => true,
                 'type' => 'string',
-                'validate_callback' => function($param) {
-                    // Solo permitir nombres alfanuméricos, guiones y guiones bajos (sin rutas ni puntos)
-                    return is_string($param) && !empty($param) && preg_match('/^[a-zA-Z0-9_-]+$/', $param);
-                }
+                'validate_callback' => function($param) { return flowtitude_validate_folder_name($param); }
             ],
         ],
     ]);
@@ -159,27 +169,13 @@ function flowtitude_create_snippet_folder(WP_REST_Request $request) {
         $folder_name = sanitize_file_name($params['folder_name']);
         
         // Verificar que el nombre sea válido
-        if (empty($folder_name) || $folder_name === '.' || $folder_name === '..' || 
-            strpos($folder_name, '/') !== false || strpos($folder_name, '\\') !== false ||
-            preg_match('/[\\\/:*?"<>|]/', $folder_name)) {
+        if (!flowtitude_validate_folder_name($folder_name)) {
             if (function_exists('flowtitude_debug_log')) {
                 flowtitude_debug_log('Intento de crear carpeta con nombre inválido: ' . $folder_name, 'warning');
             }
             return new WP_REST_Response([
                 'success' => false,
                 'message' => 'Nombre de carpeta no válido'
-            ], 400);
-        }
-        
-        // Verificar que no sea un nombre reservado
-        $reserved_names = ['utils', '.DS_Store', 'node_modules', '.git'];
-        if (in_array(strtolower($folder_name), $reserved_names)) {
-            if (function_exists('flowtitude_debug_log')) {
-                flowtitude_debug_log('Intento de crear carpeta con nombre reservado: ' . $folder_name, 'warning');
-            }
-            return new WP_REST_Response([
-                'success' => false,
-                'message' => 'Este nombre está reservado para uso del sistema'
             ], 400);
         }
         
