@@ -92,7 +92,7 @@ function flowtitude_debug_log($message, $type = 'info', $context = 'flowtitude')
     }
     
     // Obtener configuración de logging desde la base de datos (para compatibilidad)
-    $security_settings = get_option('flowtitude_security_settings', []);
+    $security_settings = flowtitude_get_security_settings();
     
     // Verificar si el logging está activado desde el panel de administración
     $logging_enabled = !empty($security_settings['wp_debug']) || 
@@ -122,13 +122,24 @@ function flowtitude_debug_log($message, $type = 'info', $context = 'flowtitude')
     }
 }
 
+// Helper para obtener la configuración de seguridad solo una vez por petición
+if (!function_exists('flowtitude_get_security_settings')) {
+    function flowtitude_get_security_settings() {
+        static $settings = null;
+        if ($settings === null) {
+            $settings = get_option('flowtitude_security_settings', []);
+        }
+        return $settings;
+    }
+}
+
 // ===== APLICACIÓN DE CONFIGURACIONES DE WORDPRESS =====
 
 /**
  * Aplicar configuraciones de WordPress desde el panel de administración
  */
 function flowtitude_apply_wp_configurations() {
-    $security_settings = get_option('flowtitude_security_settings', []);
+    $security_settings = flowtitude_get_security_settings();
     
     // Configuraciones de debug
     if (!empty($security_settings['wp_debug'])) {
@@ -203,7 +214,7 @@ add_action('init', 'flowtitude_apply_wp_configurations', 1);
  * Aplicar configuraciones de seguridad
  */
 function flowtitude_apply_security_settings() {
-    $security_settings = get_option('flowtitude_security_settings', []);
+    $security_settings = flowtitude_get_security_settings();
     
     // Ocultar versión de WordPress
     if (!empty($security_settings['hide_wp_version'])) {
@@ -303,7 +314,7 @@ add_action('init', 'flowtitude_apply_security_settings', 2);
  * Aplicar badges y banners para modos de desarrollo/migración
  */
 function flowtitude_apply_development_badges() {
-    $security_settings = get_option('flowtitude_security_settings', []);
+    $security_settings = flowtitude_get_security_settings();
     
     // Solo ejecutar si estamos en modo de desarrollo o migración
     if (!empty($security_settings['migration_mode']) || !empty($security_settings['development_mode'])) {
@@ -407,7 +418,7 @@ add_action('init', 'flowtitude_apply_development_badges', 3);
  * Registrar hooks y acciones si está activado
  */
 function flowtitude_log_hooks() {
-    $security_settings = get_option('flowtitude_security_settings', []);
+    $security_settings = flowtitude_get_security_settings();
     
     if (!empty($security_settings['log_hooks'])) {
         add_action('all', function($tag, $args) {
@@ -426,7 +437,7 @@ add_action('init', 'flowtitude_log_hooks', 4);
 if (!function_exists('flowtitude_debug_log')) {
     function flowtitude_debug_log($message, $type = 'info', $context = 'flowtitude') {
         // Fallback simple - solo si el logging está explícitamente activado
-        $security_settings = get_option('flowtitude_security_settings', []);
+        $security_settings = flowtitude_get_security_settings();
         $logging_enabled = !empty($security_settings['wp_debug']) || 
                           !empty($security_settings['wp_debug_log']) || 
                           !empty($security_settings['log_hooks']);
