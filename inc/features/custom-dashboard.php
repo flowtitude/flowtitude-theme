@@ -145,14 +145,22 @@ function procesar_etiquetas_dinamicas_dashboard($tag, $post = null, $context = '
 
 function encolar_bricks_assets_dashboard() {
     // Asegúrate de que los scripts de Bricks estén disponibles
-    wp_enqueue_script('bricks-builder', get_template_directory_uri() . '/path/to/bricks-builder.js', array('jquery'), null, true);
-    wp_enqueue_style('bricks-builder', get_template_directory_uri() . '/path/to/bricks-builder.css', array(), null);
+    if (!wp_script_is('bricks-builder', 'enqueued')) {
+        wp_enqueue_script('bricks-builder', get_template_directory_uri() . '/path/to/bricks-builder.js', array('jquery'), null, true);
+    }
+    if (!wp_style_is('bricks-builder', 'enqueued')) {
+        wp_enqueue_style('bricks-builder', get_template_directory_uri() . '/path/to/bricks-builder.css', array(), null);
+    }
 }
 add_action('admin_enqueue_scripts', 'encolar_bricks_assets_dashboard');
 
 // Filtros para procesar etiquetas dinámicas
 add_filter('bricks/dynamic_data/render_content', 'procesar_contenido_etiquetas_dinamicas_dashboard', 20, 2);
 add_filter('bricks/frontend/render_data', 'procesar_contenido_etiquetas_dinamicas_dashboard', 20, 2);
+
+require_once get_template_directory() . '/../bricks/includes/integrations/dynamic-data/dynamic-data-parser.php';
+
+use Bricks\Integrations\Dynamic_Data\Dynamic_Data_Parser;
 
 function procesar_contenido_etiquetas_dinamicas_dashboard() {
     $args = func_get_args();
@@ -165,23 +173,72 @@ function procesar_contenido_etiquetas_dinamicas_dashboard() {
         return $content;
     }
 
-    // Procesar etiquetas dinámicas estándar
-    /*
-    $user = wp_get_current_user();
-    $content = str_replace('{wp_user_nickname}', $user->nickname, $content);
-    $content = str_replace('{site_title}', get_bloginfo('name'), $content);
-    $content = str_replace('{wp_user_avatar}', get_avatar_url($user->ID), $content);
-    */
+    $parser = new Dynamic_Data_Parser();
 
-    // Procesar etiquetas dinámicas de Bricks
-    if (function_exists('bricks_process_dynamic_tag')) {
-        $content = preg_replace_callback('/{([^}]+)}/', function($matches) use ($post) {
-            return bricks_process_dynamic_tag($matches[1], $post);
-        }, $content);
-    }
+    // Procesar etiquetas dinámicas
+    $content = preg_replace_callback('/{([^}]+)}/', function($matches) use ($post, $parser) {
+        $parsed_data = $parser->parse($matches[1]);
+        $tag = $parsed_data['tag'];
+        $args = $parsed_data['args'];
 
-    // Procesar etiquetas de Jet Engine y ACF
-    // Aquí puedes añadir lógica específica para Jet Engine y ACF si es necesario
+        // Manejar etiquetas de usuario
+        
+        if (strpos($tag, 'wp_user_') === 0) {
+            $user = wp_get_current_user();
+            switch ($tag) {
+                case 'wp_user_nickname':
+                    return $user->nickname;
+                case 'wp_user_avatar':
+                    return get_avatar_url($user->ID);
+                // Añadir más casos según sea necesario
+            }
+        }
+      
+
+        // Sistema de procesamiento para ACF
+        if (function_exists('get_field')) {
+            $acf_value = get_field($tag, $post);
+            if ($acf_value) {
+                return $acf_value;
+            }
+        }
+
+        // Preparar integración con Jet Engine
+        // Aquí podríamos añadir lógica específica para Jet Engine
+
+        // Si no se encuentra un reemplazo, devolver la etiqueta sin cambios
+        return '{' . $tag . '}';
+    }, $content);
 
     return $content;
-} 
+}
+
+class DashboardDynamicTagProcessor {
+    public static function process_tags($content, $post = null) {
+        // Verificar si el contenido contiene etiquetas dinámicas
+        if (strpos($content, '{') === false) {
+            return $content;
+        }
+
+        // Añadir registro de depuración
+        error_log('Procesando contenido: ' . $content);
+
+        // Procesar etiquetas dinámicas de Bricks
+        if (function_exists('bricks_process_dynamic_tag')) {
+            $content = preg_replace_callback('/{([^}]+)}/', function($matches) use ($post) {
+                $processed_tag = bricks_process_dynamic_tag($matches[1], $post);
+                error_log('Etiqueta procesada: ' . $matches[1] . ' -> ' . $processed_tag);
+                return $processed_tag;
+            }, $content);
+        }
+
+        // Procesar etiquetas de Jet Engine y ACF
+        // Aquí puedes añadir lógica específica para Jet Engine y ACF si es necesario
+
+        return $content;
+    }
+}
+
+// Reemplazar el uso directo de la función por la clase
+add_filter('bricks/dynamic_data/render_content', ['DashboardDynamicTagProcessor', 'process_tags'], 20, 2);
+add_filter('bricks/frontend/render_data', ['DashboardDynamicTagProcessor', 'process_tags'], 20, 2); 
