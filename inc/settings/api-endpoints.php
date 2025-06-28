@@ -832,23 +832,23 @@ add_action('rest_api_init', function () {
 			file_put_contents($backup_dir . '/README.txt', $readme);
 			// Tablas y campos a reemplazar
 			$replaced = 0;
-			// options
+			// options (recursivo, seguro)
 			$options = $wpdb->get_results("SELECT option_id, option_value FROM $wpdb->options WHERE option_value LIKE '%" . esc_sql($old_url) . "%'");
 			foreach ($options as $opt) {
 				$new_val = flowtitude_recursive_replace($old_url, $new_url, maybe_unserialize($opt->option_value));
 				$wpdb->update($wpdb->options, ['option_value' => maybe_serialize($new_val)], ['option_id' => $opt->option_id]);
 				$replaced++;
 			}
-			// posts
+			// posts (masivo, seguro solo en post_content)
 			$wpdb->query($wpdb->prepare("UPDATE $wpdb->posts SET post_content = REPLACE(post_content, %s, %s)", $old_url, $new_url));
-			// postmeta
+			// postmeta (recursivo, seguro)
 			$postmeta = $wpdb->get_results("SELECT meta_id, meta_value FROM $wpdb->postmeta WHERE meta_value LIKE '%" . esc_sql($old_url) . "%'");
 			foreach ($postmeta as $pm) {
 				$new_val = flowtitude_recursive_replace($old_url, $new_url, maybe_unserialize($pm->meta_value));
 				$wpdb->update($wpdb->postmeta, ['meta_value' => maybe_serialize($new_val)], ['meta_id' => $pm->meta_id]);
 				$replaced++;
 			}
-			// usermeta
+			// usermeta (recursivo, seguro)
 			$usermeta = $wpdb->get_results("SELECT umeta_id, meta_value FROM $wpdb->usermeta WHERE meta_value LIKE '%" . esc_sql($old_url) . "%'");
 			foreach ($usermeta as $um) {
 				$new_val = flowtitude_recursive_replace($old_url, $new_url, maybe_unserialize($um->meta_value));
