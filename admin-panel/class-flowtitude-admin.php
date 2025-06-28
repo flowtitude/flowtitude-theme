@@ -27,7 +27,7 @@ class Flowtitude_Admin {
         update_option('flowtitude_typography', $typography);
 
         // Actualizar el archivo CSS
-        $css_file = WP_CONTENT_DIR . '/uploads/windpress/data/theme/flowtitude.css';
+        $css_file = flowtitude_get_path('files.flowtitude_css');
         if (!file_exists($css_file)) {
             wp_send_json_error('Archivo CSS no encontrado');
             return;
@@ -65,7 +65,7 @@ class Flowtitude_Admin {
         }
 
         // Actualizar la configuración de Tailwind
-        $config_file = get_template_directory() . '/tailwind.config.js';
+        $config_file = flowtitude_get_path('files.tailwind_config');
         if (!file_exists($config_file)) {
             wp_send_json_error('Archivo de configuración de Tailwind no encontrado');
             return;

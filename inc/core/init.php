@@ -29,9 +29,9 @@ if (function_exists('flowtitude_debug_log')) {
 // Se comprueba si el archivo existe antes de intentar cargarlo para evitar errores fatales.
 $custom_dashboard_file = FLOWTITUDE_DIR . '/inc/features/custom-dashboard.php';
 if (file_exists($custom_dashboard_file)) {
-	error_log('Flowtitude: Cargando custom-dashboard.php');
+	flowtitude_debug_log('Cargando custom-dashboard.php', 'info', 'init');
 	require_once $custom_dashboard_file;
-	error_log('Flowtitude: custom-dashboard.php cargado');
+	flowtitude_debug_log('custom-dashboard.php cargado', 'info', 'init');
 }
 
 // Cargar el proveedor de datos dinámicos personalizado para Bricks

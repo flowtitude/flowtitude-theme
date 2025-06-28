@@ -109,11 +109,17 @@ add_action('rest_api_init', function () {
 				'order'          => 'ASC',
 			];
 			$query = new WP_Query($args);
-			error_log('Flowtitude: Encontradas ' . count($query->posts) . ' plantillas bricks_template (section).');
+			// Solo log si el logging está activado
+			if (function_exists('flowtitude_debug_log')) {
+				flowtitude_debug_log('Encontradas ' . count($query->posts) . ' plantillas bricks_template (section).', 'info', 'bricks');
+			}
 			$templates = [];
 			foreach ($query->posts as $post) {
 				$meta = get_post_meta($post->ID, '_bricks_template_type', true);
-				error_log('Flowtitude: Post ID ' . $post->ID . ' - Title: ' . $post->post_title . ' - Meta: ' . $meta);
+				// Solo log si el logging está activado
+				if (function_exists('flowtitude_debug_log')) {
+					flowtitude_debug_log('Post ID ' . $post->ID . ' - Title: ' . $post->post_title . ' - Meta: ' . $meta, 'debug', 'bricks');
+				}
 				$templates[] = [
 					'id'    => $post->ID,
 					'title' => $post->post_title,
@@ -129,7 +135,10 @@ add_action('rest_api_init', function () {
 		}
 	]);
 	
-	error_log('Flowtitude: Endpoint /bricks/templates registrado');
+	// Solo log si el logging está activado
+	if (function_exists('flowtitude_debug_log')) {
+		flowtitude_debug_log('Endpoint /bricks/templates registrado', 'info', 'endpoints');
+	}
 });
 
 
@@ -165,9 +174,9 @@ function flowtitude_get_settings() {
 	];
 
 	// Debug para verificar los valores guardados
-	error_log('Stored settings: ' . print_r($stored, true));
-	error_log('Features: ' . print_r($features, true));
-	error_log('Merged settings: ' . print_r(array_merge($defaults, $stored, $features), true));
+	flowtitude_debug_log('Stored settings: ' . print_r($stored, true), 'debug', 'api');
+	flowtitude_debug_log('Features: ' . print_r($features, true), 'debug', 'api');
+	flowtitude_debug_log('Merged settings: ' . print_r(array_merge($defaults, $stored, $features), true), 'debug', 'api');
 
 	// Combinar todo y asegurar que todos los valores por defecto estén presentes
 	$merged = array_merge($defaults, $stored, $features);
@@ -180,7 +189,7 @@ function flowtitude_save_settings($request) {
 	$params = $request->get_json_params();
  
 	if (!is_array($params)) {
-		error_log('Invalid data format received in flowtitude_save_settings');
+		flowtitude_debug_log('Invalid data format received in flowtitude_save_settings', 'error', 'api');
 		return new WP_Error('invalid_data', 'Formato incorrecto. Se esperaba un array de parámetros.', ['status' => 400]);
 	}
 
@@ -210,7 +219,7 @@ function flowtitude_save_settings($request) {
 	$result = update_option('flowtitude_settings', $sanitized);
 	
 	if ($result === false) {
-		error_log('Error saving flowtitude settings');
+		flowtitude_debug_log('Error saving flowtitude settings', 'error', 'api');
 		return new WP_Error('save_failed', 'Error al guardar las preferencias.', ['status' => 500]);
 	}
  
@@ -284,7 +293,7 @@ function flowtitude_extract_snippet_meta($file_path) {
 function flowtitude_save_active_snippets($request) {
 	$params = $request->get_json_params();
 	if (!is_array($params)) {
-		error_log('Invalid data format received in flowtitude_save_active_snippets');
+		flowtitude_debug_log('Invalid data format received in flowtitude_save_active_snippets', 'error', 'api');
 		return new WP_Error('invalid_data', 'Lista no válida', ['status' => 400]);
 	}
 
@@ -304,7 +313,7 @@ function flowtitude_save_active_snippets($request) {
 	$result = update_option('flowtitude_active_snippets', array_values($safe_files));
 	
 	if ($result === false) {
-		error_log('Error saving active snippets');
+		flowtitude_debug_log('Error saving active snippets', 'error', 'api');
 		return new WP_Error('save_failed', 'Error al guardar los snippets activos.', ['status' => 500]);
 	}
 
@@ -322,11 +331,11 @@ function flowtitude_list_snippet_files() {
 	$files = [];
 	
 	// Registrar información de depuración
-	error_log('Flowtitude: Listando archivos de snippets desde: ' . $custom_dir);
+	flowtitude_debug_log('Listando archivos de snippets desde: ' . $custom_dir, 'debug', 'api');
 	
 	// Verificar si el directorio existe
 	if (!file_exists($custom_dir)) {
-		error_log('Flowtitude: El directorio de snippets no existe, creándolo');
+		flowtitude_debug_log('El directorio de snippets no existe, creándolo', 'info', 'api');
 		wp_mkdir_p($custom_dir);
 		return rest_ensure_response([
 			'message' => 'No hay snippets disponibles. Sube tu primer snippet para comenzar.',
@@ -340,7 +349,7 @@ function flowtitude_list_snippet_files() {
 	
 	// Verificar permisos del directorio
 	if (!is_readable($custom_dir)) {
-		error_log('Flowtitude: El directorio de snippets no tiene permisos de lectura: ' . $custom_dir);
+		flowtitude_debug_log('El directorio de snippets no tiene permisos de lectura: ' . $custom_dir, 'error', 'api');
 		return rest_ensure_response([
 			'message' => 'Error: No se puede leer el directorio de snippets.',
 			'files' => [],
@@ -372,13 +381,19 @@ function flowtitude_list_snippet_files() {
 					'path' => $item->getPathname()
 				];
 				
-				error_log('Flowtitude: Snippet encontrado en raíz: ' . $rel_path);
+				// Solo log si el logging está activado
+				if (function_exists('flowtitude_debug_log')) {
+					flowtitude_debug_log('Snippet encontrado en raíz: ' . $rel_path, 'info', 'snippets');
+				}
 			} elseif ($item->isDir() && $item->getFilename() !== '.DS_Store') {
 				// Escanear subdirectorios
 				$subdir_name = $item->getFilename();
 				$subdir_path = $custom_dir . '/' . $subdir_name;
 				
-				error_log('Flowtitude: Escaneando subdirectorio: ' . $subdir_path);
+				// Solo log si el logging está activado
+				if (function_exists('flowtitude_debug_log')) {
+					flowtitude_debug_log('Escaneando subdirectorio: ' . $subdir_path, 'debug', 'snippets');
+				}
 				
 				if (is_readable($subdir_path)) {
 					foreach (new DirectoryIterator($subdir_path) as $subitem) {
@@ -396,18 +411,30 @@ function flowtitude_list_snippet_files() {
 								'path' => $subitem->getPathname()
 							];
 							
-							error_log('Flowtitude: Snippet encontrado en ' . $subdir_name . ': ' . $subitem->getFilename());
+							// Solo log si el logging está activado
+							if (function_exists('flowtitude_debug_log')) {
+								flowtitude_debug_log('Snippet encontrado en ' . $subdir_name . ': ' . $subitem->getFilename(), 'info', 'snippets');
+							}
 						}
 					}
 				} else {
-					error_log('Flowtitude: No se puede leer el subdirectorio: ' . $subdir_path);
+					// Solo log si el logging está activado
+					if (function_exists('flowtitude_debug_log')) {
+						flowtitude_debug_log('No se puede leer el subdirectorio: ' . $subdir_path, 'warning', 'snippets');
+					}
 				}
 			}
 		}
 		
-		error_log('Flowtitude: Total de archivos escaneados: ' . $total_files . ', archivos PHP: ' . $php_files);
+		// Solo log si el logging está activado
+		if (function_exists('flowtitude_debug_log')) {
+			flowtitude_debug_log('Total de archivos escaneados: ' . $total_files . ', archivos PHP: ' . $php_files, 'info', 'snippets');
+		}
 	} catch (Exception $e) {
-		error_log('Flowtitude: Error al listar snippets: ' . $e->getMessage());
+		// Solo log si el logging está activado
+		if (function_exists('flowtitude_debug_log')) {
+			flowtitude_debug_log('Error al listar snippets: ' . $e->getMessage(), 'error', 'snippets');
+		}
 		return rest_ensure_response([
 			'message' => 'Error al listar snippets: ' . $e->getMessage(),
 			'files' => [],
@@ -419,7 +446,10 @@ function flowtitude_list_snippet_files() {
 	}
 
 	if (empty($files)) {
-		error_log('Flowtitude: No se encontraron archivos PHP en el directorio de snippets');
+		// Solo log si el logging está activado
+		if (function_exists('flowtitude_debug_log')) {
+			flowtitude_debug_log('No se encontraron archivos PHP en el directorio de snippets', 'info', 'snippets');
+		}
 		return rest_ensure_response([
 			'message' => 'No hay snippets disponibles. Sube tu primer snippet para comenzar.',
 			'files' => [],
@@ -697,7 +727,10 @@ add_action('rest_api_init', function () {
 				'dashboard_template_id' => '',
 			];
 			$stored = get_option('flowtitude_security_settings', []);
-			error_log('Flowtitude: Recuperando settings: ' . print_r(array_merge($defaults, (array) $stored), true));
+			// Solo log si el logging está activado
+			if (function_exists('flowtitude_debug_log')) {
+				flowtitude_debug_log('Recuperando settings: ' . print_r(array_merge($defaults, (array) $stored), true), 'debug', 'security');
+			}
 			return rest_ensure_response(array_merge($defaults, (array) $stored));
 		},
 		'permission_callback' => fn() => current_user_can('edit_theme_options'),
@@ -741,7 +774,10 @@ add_action('rest_api_init', function () {
 				'dashboard_template_id' => isset($params['dashboard_template_id']) ? (string)sanitize_text_field($params['dashboard_template_id']) : '',
 			];
 
-			error_log('Flowtitude: Guardando settings: ' . print_r($sanitized, true));
+			// Solo log si el logging está activado
+			if (function_exists('flowtitude_debug_log')) {
+				flowtitude_debug_log('Guardando settings: ' . print_r($sanitized, true), 'debug', 'security');
+			}
 			update_option('flowtitude_security_settings', $sanitized);
 
 			return rest_ensure_response(['success' => true]);

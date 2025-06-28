@@ -91,9 +91,17 @@ class Flowtitude_Error_Handler {
         }
 
         if (function_exists('flowtitude_debug_log')) {
-            flowtitude_debug_log($log_message, 'error');
+            flowtitude_debug_log($log_message, 'error', 'error_handler');
         } else {
-            error_log($log_message);
+            // Fallback solo si el logging está activado
+            $security_settings = get_option('flowtitude_security_settings', []);
+            $logging_enabled = !empty($security_settings['wp_debug']) || 
+                              !empty($security_settings['wp_debug_log']) || 
+                              !empty($security_settings['log_hooks']);
+            
+            if ($logging_enabled && defined('WP_DEBUG') && WP_DEBUG) {
+                error_log($log_message);
+            }
         }
     }
 
@@ -150,9 +158,9 @@ class Flowtitude_Error_Handler {
 
         // Verificar que la ruta está dentro del directorio permitido
         $allowed_dirs = [
-            WP_CONTENT_DIR . '/uploads/flowtitude',
-            get_template_directory() . '/snippets',
-            get_template_directory() . '/bricks'
+            flowtitude_get_path('uploads.flowtitude'),
+            flowtitude_get_path('theme.snippets'),
+            flowtitude_get_path('bricks.root')
         ];
 
         $real_path = realpath($data['path']);

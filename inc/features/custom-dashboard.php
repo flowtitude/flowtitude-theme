@@ -68,12 +68,14 @@ function flowtitude_enqueue_bricks_assets_admin() {
         $template_id = !empty($settings['custom_dashboard_template']) ? (int)$settings['custom_dashboard_template'] : 0;
 
         if ($template_id) {
-            // Listar todos los handles de estilos encolados
-            global $wp_styles;
-            error_log('Estilos encolados: ' . implode(', ', $wp_styles->queue));
+            // Solo log si el logging está activado
+            if (function_exists('flowtitude_debug_log')) {
+                global $wp_styles;
+                flowtitude_debug_log('Estilos encolados: ' . implode(', ', $wp_styles->queue), 'debug', 'dashboard');
+            }
         }
 
-        // Encolar Tailwind desde uploads
+        // Encolar Tailwind desde uploads (ruta absoluta fuera del tema)
         $tailwind_url = content_url('uploads/windpress/cache/tailwind.css');
         wp_enqueue_style('flowtitude-tailwind', $tailwind_url, [], null);
 
@@ -89,11 +91,11 @@ function flowtitude_enqueue_bricks_assets_admin() {
         }
 
         // Cargar el archivo de correcciones para la UI del admin.
-        $fixes_file_path = get_stylesheet_directory() . '/admin-panel/css/dashboard-fixes.css';
+        $fixes_file_path = flowtitude_get_path('files.dashboard_fixes');
         if (file_exists($fixes_file_path)) {
             wp_enqueue_style(
                 'flowtitude-dashboard-fixes',
-                get_stylesheet_directory_uri() . '/admin-panel/css/dashboard-fixes.css',
+                flowtitude_get_path('files.dashboard_fixes', true),
                 ['flowtitude-tailwind', 'bricks-frontend'], // Asegurar que se cargue después
                 filemtime($fixes_file_path)
             );
@@ -158,7 +160,13 @@ add_action('admin_enqueue_scripts', 'encolar_bricks_assets_dashboard');
 add_filter('bricks/dynamic_data/render_content', 'procesar_contenido_etiquetas_dinamicas_dashboard', 20, 2);
 add_filter('bricks/frontend/render_data', 'procesar_contenido_etiquetas_dinamicas_dashboard', 20, 2);
 
-require_once get_template_directory() . '/../bricks/includes/integrations/dynamic-data/dynamic-data-parser.php';
+// Cargar el parser de Bricks dinámicamente
+$bricks_parser_path = flowtitude_get_path('bricks.parser');
+if ($bricks_parser_path && file_exists($bricks_parser_path)) {
+    require_once $bricks_parser_path;
+} else {
+    flowtitude_debug_log('No se pudo cargar el parser de Bricks: ' . $bricks_parser_path, 'warning', 'dashboard');
+}
 
 use Bricks\Integrations\Dynamic_Data\Dynamic_Data_Parser;
 
@@ -220,14 +228,19 @@ class DashboardDynamicTagProcessor {
             return $content;
         }
 
-        // Añadir registro de depuración
-        error_log('Procesando contenido: ' . $content);
+        // Solo log si el logging está activado
+        if (function_exists('flowtitude_debug_log')) {
+            flowtitude_debug_log('Procesando contenido: ' . $content, 'debug', 'dashboard');
+        }
 
         // Procesar etiquetas dinámicas de Bricks
         if (function_exists('bricks_process_dynamic_tag')) {
             $content = preg_replace_callback('/{([^}]+)}/', function($matches) use ($post) {
                 $processed_tag = bricks_process_dynamic_tag($matches[1], $post);
-                error_log('Etiqueta procesada: ' . $matches[1] . ' -> ' . $processed_tag);
+                // Solo log si el logging está activado
+                if (function_exists('flowtitude_debug_log')) {
+                    flowtitude_debug_log('Etiqueta procesada: ' . $matches[1] . ' -> ' . $processed_tag, 'debug', 'dashboard');
+                }
                 return $processed_tag;
             }, $content);
         }

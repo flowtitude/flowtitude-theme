@@ -1,22 +1,49 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+if (file_exists(__DIR__ . '/inc/settings/paths-config.php')) {
+	require_once __DIR__ . '/inc/settings/paths-config.php';
+}
+
 /**
  * Escribe mensajes en el log de depuración de WordPress para Flowtitude.
  *
  * @param mixed $message Mensaje o variable a registrar.
  * @param string $type Tipo de mensaje (info, debug, warning, success).
  */
-// Función de depuración
-if (!defined('FLOWTITUDE_LOG')) define('FLOWTITUDE_LOG', false); // Cambia a true para depuración avanzada
-function lowtitude_file_log($message, $type = 'info') {
-	if ((defined('WP_DEBUG') && WP_DEBUG) && (defined('FLOWTITUDE_LOG') && FLOWTITUDE_LOG)) {
-		if (is_array($message) || is_object($message)) {
-			error_log('[Flowtitude ' . strtoupper($type) . '] ' . print_r($message, true));
-		} else {
-			error_log('[Flowtitude ' . strtoupper($type) . '] ' . $message);
-		}
-	}
+// Función de depuración mejorada
+if (!defined('FLOWTITUDE_LOG')) define('FLOWTITUDE_LOG', false); // Por defecto desactivado
+if (!defined('FLOWTITUDE_LOG_LEVEL')) define('FLOWTITUDE_LOG_LEVEL', 'error'); // Solo errores críticos por defecto
+if (!defined('FLOWTITUDE_LOG_TO_FILE')) define('FLOWTITUDE_LOG_TO_FILE', false); // Log de WordPress por defecto
+
+/**
+ * Sistema de logging inteligente para Flowtitude
+ * 
+ * @param mixed $message Mensaje o variable a registrar
+ * @param string $type Tipo de mensaje (error, warning, info, debug)
+ * @param string $context Contexto opcional para filtrar logs
+ * @return void
+ */
+/**
+ * Función de logging para errores críticos (siempre se registra)
+ * 
+ * @param mixed $message Mensaje de error
+ * @param string $context Contexto opcional
+ * @return void
+ */
+function flowtitude_error_log($message, $context = '') {
+	flowtitude_debug_log($message, 'error', $context);
+}
+
+/**
+ * Función de logging para advertencias (solo si warning o superior)
+ * 
+ * @param mixed $message Mensaje de advertencia
+ * @param string $context Contexto opcional
+ * @return void
+ */
+function flowtitude_warning_log($message, $context = '') {
+	flowtitude_debug_log($message, 'warning', $context);
 }
 
 // Carga el archivo principal del tema

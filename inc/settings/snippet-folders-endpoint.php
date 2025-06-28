@@ -36,9 +36,7 @@ if (!function_exists('flowtitude_get_custom_dir')) {
 // Añadir manejo de errores global para este archivo
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
     if (function_exists('flowtitude_debug_log')) {
-        flowtitude_debug_log("Flowtitude Error: $errstr in $errfile on line $errline", 'error');
-    } else {
-        error_log("Flowtitude Error: $errstr in $errfile on line $errline");
+        flowtitude_debug_log("Error: $errstr in $errfile on line $errline", 'error', 'error_handler');
     }
     return true;
 }, E_ALL);
@@ -78,12 +76,18 @@ add_action('rest_api_init', function () {
         ],
     ]);
     
-    error_log('Flowtitude: Endpoints REST API registrados correctamente');
+    // Solo log si el logging está activado
+    if (function_exists('flowtitude_debug_log')) {
+        flowtitude_debug_log('Endpoints REST API registrados correctamente', 'info', 'endpoints');
+    }
 });
 
 // Añadir un hook para verificar que WordPress está cargando el archivo
 add_action('init', function() {
-    error_log('Flowtitude: Plugin inicializado');
+    // Solo log si el logging está activado
+    if (function_exists('flowtitude_debug_log')) {
+        flowtitude_debug_log('Plugin inicializado', 'info', 'init');
+    }
 });
 
 /**

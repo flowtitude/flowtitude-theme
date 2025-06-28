@@ -1,274 +1,438 @@
 <?php
-/*
-Plugin Name: Flowtitude Configuración Debug
-Description: Aplica las opciones de debug y constantes avanzadas desde el panel Flowtitude.
-Author: Flowtitude
-Version: 1.0
-*/
+/**
+ * Mu-Plugin unificado de configuración para Flowtitude
+ * 
+ * Este archivo se carga automáticamente antes que cualquier plugin o tema
+ * y maneja todas las configuraciones de Flowtitude de forma centralizada
+ */
 
 if (!defined('ABSPATH')) exit;
 
-// Cargar solo si la función get_option existe
-if (!function_exists('get_option')) return;
+// ===== CONSTANTES DE LOGGING DEL TEMA =====
+// Estas constantes controlan el logging específico del tema Flowtitude
+// Se pueden modificar aquí para activar/desactivar logs específicos
 
-$opts = get_option('flowtitude_security_settings', []);
-$general_opts = get_option('flowtitude_settings', []);
+// Logging general del tema
+if (!defined('FLOWTITUDE_LOG')) define('FLOWTITUDE_LOG', false);
 
-// Configuración de memoria
-if (!empty($general_opts['wp_memory_limit'])) {
-    $memory_limit = sanitize_text_field($general_opts['wp_memory_limit']);
-    if (preg_match('/^(\d+)([MG])$/', $memory_limit, $matches)) {
-        define_if_not_set('WP_MEMORY_LIMIT', $memory_limit);
+// Nivel de logging (error, warning, info, debug)
+if (!defined('FLOWTITUDE_LOG_LEVEL')) define('FLOWTITUDE_LOG_LEVEL', 'error');
+
+// Logging específico por módulos
+if (!defined('FLOWTITUDE_LOG_DASHBOARD')) define('FLOWTITUDE_LOG_DASHBOARD', false);
+if (!defined('FLOWTITUDE_LOG_ENDPOINTS')) define('FLOWTITUDE_LOG_ENDPOINTS', false);
+if (!defined('FLOWTITUDE_LOG_SNIPPETS')) define('FLOWTITUDE_LOG_SNIPPETS', false);
+if (!defined('FLOWTITUDE_LOG_SECURITY')) define('FLOWTITUDE_LOG_SECURITY', false);
+if (!defined('FLOWTITUDE_LOG_BRICKS')) define('FLOWTITUDE_LOG_BRICKS', false);
+if (!defined('FLOWTITUDE_LOG_HOOKS')) define('FLOWTITUDE_LOG_HOOKS', false);
+
+// ===== CONFIGURACIÓN GLOBAL POR DEFECTO =====
+// Estas constantes se pueden sobrescribir en wp-config.php si es necesario
+
+// Configuración del tema
+if (!defined('FLOWTITUDE_VERSION')) {
+    define('FLOWTITUDE_VERSION', '2.0.0');
+}
+
+if (!defined('FLOWTITUDE_MIN_WP_VERSION')) {
+    define('FLOWTITUDE_MIN_WP_VERSION', '6.0');
+}
+
+if (!defined('FLOWTITUDE_MIN_PHP_VERSION')) {
+    define('FLOWTITUDE_MIN_PHP_VERSION', '8.0');
+}
+
+// Directorios por defecto
+if (!defined('FLOWTITUDE_SNIPPETS_DIR')) {
+    define('FLOWTITUDE_SNIPPETS_DIR', 'snippets');
+}
+
+if (!defined('FLOWTITUDE_BRICKS_DIR')) {
+    define('FLOWTITUDE_BRICKS_DIR', 'bricks');
+}
+
+// ===== SISTEMA DE LOGGING UNIFICADO =====
+
+/**
+ * Función de logging unificada para Flowtitude
+ * Maneja tanto logs del mu-plugin como del panel de administración
+ */
+function flowtitude_debug_log($message, $type = 'info', $context = 'flowtitude') {
+    // Verificar si el logging general está activado
+    if (!defined('FLOWTITUDE_LOG') || !FLOWTITUDE_LOG) {
+        return;
+    }
+    
+    // Verificar nivel de logging
+    $levels = ['error' => 1, 'warning' => 2, 'info' => 3, 'debug' => 4];
+    $current_level = defined('FLOWTITUDE_LOG_LEVEL') ? FLOWTITUDE_LOG_LEVEL : 'error';
+    $message_level = isset($levels[$type]) ? $levels[$type] : 3;
+    $max_level = isset($levels[$current_level]) ? $levels[$current_level] : 1;
+    
+    if ($message_level > $max_level) {
+        return;
+    }
+    
+    // Verificar logging específico por módulo
+    $module_constants = [
+        'dashboard' => 'FLOWTITUDE_LOG_DASHBOARD',
+        'endpoints' => 'FLOWTITUDE_LOG_ENDPOINTS',
+        'snippets' => 'FLOWTITUDE_LOG_SNIPPETS',
+        'security' => 'FLOWTITUDE_LOG_SECURITY',
+        'bricks' => 'FLOWTITUDE_LOG_BRICKS',
+        'hooks' => 'FLOWTITUDE_LOG_HOOKS'
+    ];
+    
+    // Si el contexto está en la lista de módulos, verificar su constante
+    if (isset($module_constants[$context])) {
+        $module_constant = $module_constants[$context];
+        if (!defined($module_constant) || !constant($module_constant)) {
+            return;
+        }
+    }
+    
+    // Obtener configuración de logging desde la base de datos (para compatibilidad)
+    $security_settings = get_option('flowtitude_security_settings', []);
+    
+    // Verificar si el logging está activado desde el panel de administración
+    $logging_enabled = !empty($security_settings['wp_debug']) || 
+                      !empty($security_settings['wp_debug_log']) || 
+                      !empty($security_settings['log_hooks']);
+    
+    // Si no hay configuración desde el panel, usar las constantes
+    if (!$logging_enabled) {
+        $logging_enabled = FLOWTITUDE_LOG;
+    }
+    
+    if (!$logging_enabled) {
+        return;
+    }
+    
+    // Formatear el mensaje
+    $formatted_message = '[Flowtitude ' . strtoupper($type) . '] [' . $context . '] ' . $message;
+    
+    // Determinar dónde escribir el log
+    $log_path = !empty($security_settings['wp_debug_log_path']) ? 
+                $security_settings['wp_debug_log_path'] : 
+                WP_CONTENT_DIR . '/debug.log';
+    
+    // Escribir al log
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log($formatted_message);
     }
 }
 
-if (!empty($general_opts['wp_max_memory_limit'])) {
-    $max_memory_limit = sanitize_text_field($general_opts['wp_max_memory_limit']);
-    if (preg_match('/^(\d+)([MG])$/', $max_memory_limit, $matches)) {
-        define_if_not_set('WP_MAX_MEMORY_LIMIT', $max_memory_limit);
+// ===== APLICACIÓN DE CONFIGURACIONES DE WORDPRESS =====
+
+/**
+ * Aplicar configuraciones de WordPress desde el panel de administración
+ */
+function flowtitude_apply_wp_configurations() {
+    $security_settings = get_option('flowtitude_security_settings', []);
+    
+    // Configuraciones de debug
+    if (!empty($security_settings['wp_debug'])) {
+        if (!defined('WP_DEBUG')) {
+            define('WP_DEBUG', true);
+        }
+    }
+    
+    if (!empty($security_settings['wp_debug_display'])) {
+        if (!defined('WP_DEBUG_DISPLAY')) {
+            define('WP_DEBUG_DISPLAY', true);
+        }
+    }
+    
+    if (!empty($security_settings['wp_debug_log'])) {
+        if (!defined('WP_DEBUG_LOG')) {
+            define('WP_DEBUG_LOG', true);
+        }
+        if (!empty($security_settings['wp_debug_log_path'])) {
+            if (!defined('WP_DEBUG_LOG_PATH')) {
+                define('WP_DEBUG_LOG_PATH', $security_settings['wp_debug_log_path']);
+            }
+        }
+    }
+    
+    if (!empty($security_settings['script_debug'])) {
+        if (!defined('SCRIPT_DEBUG')) {
+            define('SCRIPT_DEBUG', true);
+        }
+    }
+    
+    if (!empty($security_settings['savequeries'])) {
+        if (!defined('SAVEQUERIES')) {
+            define('SAVEQUERIES', true);
+        }
+    }
+    
+    if (!empty($security_settings['disable_wp_cron'])) {
+        if (!defined('DISABLE_WP_CRON')) {
+            define('DISABLE_WP_CRON', true);
+        }
+    }
+    
+    // Configuraciones de caché
+    if (!empty($security_settings['wp_cache'])) {
+        if (!defined('WP_CACHE')) {
+            define('WP_CACHE', true);
+        }
+    }
+    
+    // Configuraciones de memoria
+    if (!empty($security_settings['wp_memory_limit'])) {
+        @ini_set('memory_limit', $security_settings['wp_memory_limit']);
+    }
+    
+    if (!empty($security_settings['wp_max_memory_limit'])) {
+        @ini_set('max_execution_time', 300);
+    }
+    
+    // Solo log si hay configuraciones activas
+    if (!empty($security_settings['wp_debug']) || !empty($security_settings['wp_debug_log'])) {
+        flowtitude_debug_log('Configuraciones de WordPress aplicadas desde panel de administración', 'info', 'config');
     }
 }
 
-// Optimización de memoria
-if (!empty($general_opts['optimize_memory'])) {
-    // Limpiar memoria después de operaciones pesadas
-    add_action('shutdown', function() {
-        if (function_exists('gc_collect_cycles')) {
-            gc_collect_cycles();
+// Aplicar configuraciones temprano
+add_action('init', 'flowtitude_apply_wp_configurations', 1);
+
+// ===== APLICACIÓN DE CONFIGURACIONES DE SEGURIDAD =====
+
+/**
+ * Aplicar configuraciones de seguridad
+ */
+function flowtitude_apply_security_settings() {
+    $security_settings = get_option('flowtitude_security_settings', []);
+    
+    // Ocultar versión de WordPress
+    if (!empty($security_settings['hide_wp_version'])) {
+        remove_action('wp_head', 'wp_generator');
+        add_filter('the_generator', '__return_empty_string');
+        // Solo log si el logging está activado
+        if (!empty($security_settings['wp_debug']) || !empty($security_settings['wp_debug_log'])) {
+            flowtitude_debug_log('Versión de WordPress oculta', 'info', 'security');
         }
-    });
-
-    // Optimizar consultas a base de datos
-    add_filter('query', function($query) {
-        if (strpos($query, 'SELECT') === 0) {
-            $query = str_replace('SELECT', 'SELECT SQL_CALC_FOUND_ROWS', $query);
+    }
+    
+    // Desactivar XML-RPC
+    if (!empty($security_settings['disable_xmlrpc'])) {
+        add_filter('xmlrpc_enabled', '__return_false');
+        // Solo log si el logging está activado
+        if (!empty($security_settings['wp_debug']) || !empty($security_settings['wp_debug_log'])) {
+            flowtitude_debug_log('XML-RPC desactivado', 'info', 'security');
         }
-        return $query;
-    });
-
-    // Desactivar carga de scripts innecesarios en el admin
-    add_action('admin_enqueue_scripts', function() {
-        if (!current_user_can('manage_options')) {
-            wp_dequeue_script('heartbeat');
-            wp_dequeue_script('autosave');
+    }
+    
+    // Desactivar REST API para visitantes no logeados
+    if (!empty($security_settings['disable_wp_api'])) {
+        add_filter('rest_authentication_errors', function($result) {
+            if (!empty($result)) {
+                return $result;
+            }
+            if (!is_user_logged_in()) {
+                return new WP_Error('rest_not_logged_in', 'No autorizado', ['status' => 401]);
+            }
+            return $result;
+        });
+        // Solo log si el logging está activado
+        if (!empty($security_settings['wp_debug']) || !empty($security_settings['wp_debug_log'])) {
+            flowtitude_debug_log('REST API desactivada para visitantes', 'info', 'security');
         }
-    }, 99);
-}
-
-// Helper para definir constantes solo si no existen
-define_if_not_set('WP_DEBUG',         !empty($opts['wp_debug']));
-define_if_not_set('WP_DEBUG_DISPLAY', !empty($opts['wp_debug_display']));
-define_if_not_set('WP_DEBUG_LOG',     !empty($opts['wp_debug_log']));
-define_if_not_set('SCRIPT_DEBUG',     !empty($opts['script_debug']));
-define_if_not_set('SAVEQUERIES',      !empty($opts['savequeries']));
-define_if_not_set('DISABLE_WP_CRON',  !empty($opts['disable_wp_cron']));
-define_if_not_set('WP_CACHE',         !empty($opts['wp_cache']));
-
-// Ruta personalizada para el log
-if (!empty($opts['wp_debug_log']) && !empty($opts['wp_debug_log_path'])) {
-    if (!defined('WP_DEBUG_LOG')) {
-        define('WP_DEBUG_LOG', $opts['wp_debug_log_path']);
+    }
+    
+    // Restricción por IP
+    if (!empty($security_settings['allowed_ips'])) {
+        $allowed_ips = array_map('trim', explode(',', $security_settings['allowed_ips']));
+        $current_ip = $_SERVER['REMOTE_ADDR'] ?? '';
+        
+        if (!in_array($current_ip, $allowed_ips) && is_admin()) {
+            wp_die('Acceso denegado desde tu IP: ' . $current_ip);
+        }
+        // Solo log si el logging está activado
+        if (!empty($security_settings['wp_debug']) || !empty($security_settings['wp_debug_log'])) {
+            flowtitude_debug_log('Restricción por IP aplicada', 'info', 'security');
+        }
+    }
+    
+    // Desactivar transients
+    if (!empty($security_settings['disable_transients'])) {
+        add_filter('set_transient', '__return_false');
+        add_filter('set_site_transient', '__return_false');
+        // Solo log si el logging está activado
+        if (!empty($security_settings['wp_debug']) || !empty($security_settings['wp_debug_log'])) {
+            flowtitude_debug_log('Transients desactivados', 'info', 'security');
+        }
+    }
+    
+    // Desactivar Heartbeat API
+    if (!empty($security_settings['disable_heartbeat'])) {
+        wp_deregister_script('heartbeat');
+        // Solo log si el logging está activado
+        if (!empty($security_settings['wp_debug']) || !empty($security_settings['wp_debug_log'])) {
+            flowtitude_debug_log('Heartbeat API desactivada', 'info', 'security');
+        }
+    }
+    
+    // Desactivar autosave
+    if (!empty($security_settings['disable_autosave'])) {
+        wp_deregister_script('autosave');
+        // Solo log si el logging está activado
+        if (!empty($security_settings['wp_debug']) || !empty($security_settings['wp_debug_log'])) {
+            flowtitude_debug_log('Autosave desactivado', 'info', 'security');
+        }
+    }
+    
+    // Limitar revisiones
+    if (isset($security_settings['revision_limit'])) {
+        if (!defined('WP_POST_REVISIONS')) {
+            define('WP_POST_REVISIONS', intval($security_settings['revision_limit']));
+        }
+        // Solo log si el logging está activado
+        if (!empty($security_settings['wp_debug']) || !empty($security_settings['wp_debug_log'])) {
+            flowtitude_debug_log('Límite de revisiones aplicado: ' . $security_settings['revision_limit'], 'info', 'security');
+        }
     }
 }
 
-// Desactivar generación de transients si está activo
-define_if_not_set('FLOWTITUDE_DISABLE_TRANSIENTS', !empty($opts['disable_transients']));
-if (defined('FLOWTITUDE_DISABLE_TRANSIENTS') && FLOWTITUDE_DISABLE_TRANSIENTS) {
-    add_filter('pre_set_transient',    '__return_false', 99);
-    add_filter('pre_set_site_transient','__return_false', 99);
-}
+add_action('init', 'flowtitude_apply_security_settings', 2);
 
-// Desactivar Heartbeat API
-if (!empty($opts['disable_heartbeat'])) {
-	add_filter('heartbeat_send', '__return_false', 99);
-	add_filter('heartbeat_tick', '__return_false', 99);
-	add_filter('heartbeat_settings', function($settings) {
-		$settings['interval'] = 120;
-		return $settings;
-	}, 99);
-	add_action('init', function() {
-		wp_deregister_script('heartbeat');
-	}, 99);
-}
-// Desactivar autosave
-if (!empty($opts['disable_autosave'])) {
-	add_action('admin_enqueue_scripts', function() {
-		wp_deregister_script('autosave');
-	}, 99);
-}
-// Limitar revisiones de posts
-add_filter('wp_revisions_to_keep', function ($num, $post) use ($opts) {
-	$limit = isset($opts['revision_limit']) ? intval($opts['revision_limit']) : 3;
-	return $limit;
-}, 10, 2);
+// ===== SISTEMA DE BADGES/BANNERS =====
 
-// Registrar hooks y acciones en un log si está activo
-if (!empty($opts['log_hooks'])) {
-	add_action('all', function() {
-		static $last_hook = '';
-		$hook = current_filter();
-		if ($hook !== $last_hook) {
-			$last_hook = $hook;
-			$log_file = WP_CONTENT_DIR . '/debug-hooks.log';
-			@file_put_contents($log_file, date('Y-m-d H:i:s') . " - $hook\n", FILE_APPEND);
-		}
-	}, 9999);
-}
-
-// Permitir acceso solo desde ciertas IPs al admin
-if (!empty($opts['allowed_ips'])) {
-	add_action('admin_init', function() use ($opts) {
-		$allowed = preg_split('/[\s,]+/', $opts['allowed_ips'], -1, PREG_SPLIT_NO_EMPTY);
-		$user_ip = $_SERVER['REMOTE_ADDR'] ?? '';
-		if (!in_array($user_ip, $allowed)) {
-			wp_die('Acceso restringido solo a IPs autorizadas.');
-		}
-	});
-}
-// Desactivar autenticación de dos factores (plugins comunes)
-if (!empty($opts['disable_2fa'])) {
-	// Para plugins como Two Factor, Wordfence, etc.
-	add_filter('two_factor_providers', '__return_empty_array', 99);
-	add_filter('wordfence_is_2fa_enabled_for_user', '__return_false', 99);
-	add_filter('wp_2fa_enabled', '__return_false', 99);
-	// Para otros plugins, se pueden añadir más filtros aquí
-}
-// Desactivar restricciones de subida de archivos
-if (!empty($opts['disable_upload_restrictions'])) {
-	add_filter('upload_mimes', function($mimes) {
-		return array_merge($mimes, [
-			'php' => 'application/x-httpd-php',
-			'exe' => 'application/octet-stream',
-			'psd' => 'image/vnd.adobe.photoshop',
-			'json' => 'application/json',
-			'xml' => 'application/xml',
-			'sql' => 'application/sql',
-			'csv' => 'text/csv',
-			'zip' => 'application/zip',
-			'rar' => 'application/x-rar-compressed',
-			'7z' => 'application/x-7z-compressed',
-			'gz' => 'application/gzip',
-			'log' => 'text/plain',
-			'ini' => 'text/plain',
-			'env' => 'text/plain',
-			'bat' => 'application/x-msdos-program',
-			'sh' => 'application/x-sh',
-			'py' => 'text/x-python',
-			'js' => 'application/javascript',
-			'tsx' => 'text/plain',
-			'ts' => 'text/plain',
-			'jsx' => 'text/plain',
-			'c' => 'text/x-c',
-			'cpp' => 'text/x-c++',
-			'java' => 'text/x-java-source',
-			'go' => 'text/plain',
-			'pl' => 'text/plain',
-			'php3' => 'application/x-httpd-php',
-			'php4' => 'application/x-httpd-php',
-			'php5' => 'application/x-httpd-php',
-			'phtml' => 'application/x-httpd-php',
-		]);
-	}, 99);
-	add_filter('user_has_cap', function($allcaps, $caps, $args, $user) {
-		if (isset($allcaps['unfiltered_upload'])) {
-			$allcaps['unfiltered_upload'] = true;
-		}
-		return $allcaps;
-	}, 10, 4);
-}
-
-// Desactivar plugins de producción
-if (!empty($opts['plugins_to_deactivate'])) {
-	add_filter('option_active_plugins', function($plugins) use ($opts) {
-		$slugs = preg_split('/[\s,]+/', $opts['plugins_to_deactivate'], -1, PREG_SPLIT_NO_EMPTY);
-		return array_filter($plugins, function($plugin) use ($slugs) {
-			foreach ($slugs as $slug) {
-				if (stripos($plugin, $slug) !== false) return false;
-			}
-			return true;
-		});
-	});
-}
-
-// Badge en la admin bar (top), tanto en admin como en frontend si la barra está visible
-if (!empty($opts['migration_mode']) || !empty($opts['development_mode'])) {
-    error_log('Flowtitude: Entrando en bloque de badge/banners. migration_mode='.(empty($opts['migration_mode'])?'0':'1').', development_mode='.(empty($opts['development_mode'])?'0':'1'));
-    add_action('admin_bar_menu', function($wp_admin_bar) use ($opts) {
-        error_log('Flowtitude: Ejecutando admin_bar_menu para badge.');
-        if (!is_user_logged_in() || !current_user_can('manage_options')) { error_log('Flowtitude: No es admin o no logueado.'); return; }
-        $mode = !empty($opts['development_mode']) ? 'desarrollo' : 'migración';
-        $color = $mode === 'desarrollo' ? '#2563eb' : '#f59e0b';
-        $label = $mode === 'desarrollo' ? 'Modo desarrollo' : 'Migración activa';
-        error_log('Flowtitude: Añadiendo badge. Modo='.$mode.', Color='.$color.', Label='.$label);
-        $wp_admin_bar->add_node([
-            'id'    => 'flowtitude-mode-badge',
-            'title' => '<span class="flowtitude-mode-badge-inner">'.$label.'</span>',
-            'href'  => false,
-            'parent'=> 'top-secondary',
-            'meta'  => ['title' => 'Modo especial de Flowtitude']
-        ]);
-    }, 9999);
-    add_action('admin_head', function() use ($opts) {
-        error_log('Flowtitude: Ejecutando admin_head para badge.');
-        $mode = !empty($opts['development_mode']) ? 'desarrollo' : 'migración';
-        $color = $mode === 'desarrollo' ? '#2563eb' : '#f59e0b';
-        echo '<style>
-        #wp-admin-bar-flowtitude-mode-badge > .ab-item {
-            background: '.$color.' !important;
-            color: #fff !important;
-            border-radius: 0 !important;
-            font-weight: 600;
-            padding: 0 12px !important;
-            font-size: 13px !important;
-            display: flex;
-            align-items: center;
-            height: 32px !important;
-            min-height: 32px !important;
-            box-shadow: none;
-            opacity: 0.97;
+/**
+ * Aplicar badges y banners para modos de desarrollo/migración
+ */
+function flowtitude_apply_development_badges() {
+    $security_settings = get_option('flowtitude_security_settings', []);
+    
+    // Solo ejecutar si estamos en modo de desarrollo o migración
+    if (!empty($security_settings['migration_mode']) || !empty($security_settings['development_mode'])) {
+        // Solo log si el logging está activado
+        if (!empty($security_settings['wp_debug']) || !empty($security_settings['wp_debug_log'])) {
+            flowtitude_debug_log('Aplicando badges de desarrollo/migración', 'info', 'badges');
         }
-        #wp-admin-bar-flowtitude-mode-badge .ab-item:before { display: none; }
-        </style>';
-    }, 99);
-    add_action('wp_head', function() use ($opts) {
-        error_log('Flowtitude: Ejecutando wp_head para badge.');
-        if (!is_user_logged_in() || !current_user_can('manage_options')) { error_log('Flowtitude: No es admin o no logueado (frontend).'); return; }
-        $mode = !empty($opts['development_mode']) ? 'desarrollo' : 'migración';
-        $color = $mode === 'desarrollo' ? '#2563eb' : '#f59e0b';
-        echo '<style>
-        #wp-admin-bar-flowtitude-mode-badge > .ab-item {
-            background: '.$color.' !important;
-            color: #fff !important;
-            border-radius: 0 !important;
-            font-weight: 600;
-            padding: 0 12px !important;
-            font-size: 13px !important;
-            display: flex;
-            align-items: center;
-            height: 32px !important;
-            min-height: 32px !important;
-            box-shadow: none;
-            opacity: 0.97;
-        }
-        #wp-admin-bar-flowtitude-mode-badge .ab-item:before { display: none; }
-        </style>';
-    }, 99);
-    // Banner inferior solo en frontend, aún más pequeño y discreto
-    add_action('wp_footer', function() use ($opts) {
-        error_log('Flowtitude: Ejecutando wp_footer para banner inferior.');
-        if (is_admin()) { error_log('Flowtitude: Es admin, no mostrar banner inferior.'); return; }
-        if (!is_user_logged_in() || !current_user_can('manage_options')) { error_log('Flowtitude: No es admin o no logueado (footer).'); return; }
-        $mode = !empty($opts['development_mode']) ? 'desarrollo' : 'migración';
-        $color = $mode === 'desarrollo' ? '#2563eb' : '#f59e0b';
-        $label = $mode === 'desarrollo' ? 'Modo desarrollo activo' : 'Migración activa';
-        error_log('Flowtitude: Mostrando banner inferior. Modo='.$mode.', Color='.$color.', Label='.$label);
-        echo '<style>#flowtitude-mode-banner{position:fixed;bottom:0;left:0;right:0;z-index:9999;background:'.$color.';color:#fff;text-align:center;font-weight:500;font-size:11px;padding:1px 0;box-shadow:none;letter-spacing:0.1px;opacity:0.85;}@media (max-width:782px){#flowtitude-mode-banner{font-size:10px;padding:2px 0;}}</style>';
-        echo '<div id="flowtitude-mode-banner">'.$label.'</div>';
-    }, 99);
+        
+        // Badge en admin bar
+        add_action('admin_bar_menu', function($wp_admin_bar) use ($security_settings) {
+            if (!is_user_logged_in() || !current_user_can('manage_options')) { 
+                return; 
+            }
+            
+            $mode = !empty($security_settings['migration_mode']) ? 'migration' : 'development';
+            $color = $mode === 'migration' ? '#ff6b6b' : '#4ecdc4';
+            $label = $mode === 'migration' ? 'MIGRATION' : 'DEV';
+            
+            $wp_admin_bar->add_node([
+                'id' => 'flowtitude-badge',
+                'title' => $label,
+                'href' => '#',
+                'meta' => [
+                    'style' => "background-color: {$color} !important; color: white !important; font-weight: bold !important;"
+                ]
+            ]);
+        }, 999);
+        
+        // Estilos para el badge
+        add_action('admin_head', function() use ($security_settings) {
+            ?>
+            <style>
+            #wp-admin-bar-flowtitude-badge > a {
+                background-color: <?php echo !empty($security_settings['migration_mode']) ? '#ff6b6b' : '#4ecdc4'; ?> !important;
+                color: white !important;
+                font-weight: bold !important;
+            }
+            </style>
+            <?php
+        });
+        
+        // Banner en frontend
+        add_action('wp_head', function() use ($security_settings) {
+            if (!is_user_logged_in() || !current_user_can('manage_options')) { 
+                return; 
+            }
+            
+            $mode = !empty($security_settings['migration_mode']) ? 'migration' : 'development';
+            $color = $mode === 'migration' ? '#ff6b6b' : '#4ecdc4';
+            $label = $mode === 'migration' ? 'MIGRATION MODE' : 'DEVELOPMENT MODE';
+            
+            ?>
+            <style>
+            .flowtitude-banner {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background-color: <?php echo $color; ?>;
+                color: white;
+                text-align: center;
+                padding: 5px;
+                font-weight: bold;
+                z-index: 999999;
+                font-size: 12px;
+            }
+            body { padding-top: 30px !important; }
+            </style>
+            <div class="flowtitude-banner"><?php echo $label; ?></div>
+            <?php
+        });
+        
+        // Banner inferior
+        add_action('wp_footer', function() use ($security_settings) {
+            if (is_admin()) { 
+                return; 
+            }
+            
+            if (!is_user_logged_in() || !current_user_can('manage_options')) { 
+                return; 
+            }
+            
+            $mode = !empty($security_settings['migration_mode']) ? 'migration' : 'development';
+            $color = $mode === 'migration' ? '#ff6b6b' : '#4ecdc4';
+            $label = $mode === 'migration' ? 'MIGRATION MODE' : 'DEVELOPMENT MODE';
+            
+            ?>
+            <div style="position: fixed; bottom: 0; left: 0; right: 0; background-color: <?php echo $color; ?>; color: white; text-align: center; padding: 3px; font-size: 10px; z-index: 999999;">
+                <?php echo $label; ?>
+            </div>
+            <?php
+        });
+    }
 }
 
-function define_if_not_set($const, $value) {
-    if (!defined($const)) {
-        define($const, $value);
+add_action('init', 'flowtitude_apply_development_badges', 3);
+
+// ===== LOGGING DE HOOKS (OPCIONAL) =====
+
+/**
+ * Registrar hooks y acciones si está activado
+ */
+function flowtitude_log_hooks() {
+    $security_settings = get_option('flowtitude_security_settings', []);
+    
+    if (!empty($security_settings['log_hooks'])) {
+        add_action('all', function($tag, $args) {
+            flowtitude_debug_log("Hook ejecutado: $tag", 'debug', 'hooks');
+        }, 10, 2);
+        
+        flowtitude_debug_log('Logging de hooks activado', 'info', 'hooks');
+    }
+}
+
+add_action('init', 'flowtitude_log_hooks', 4);
+
+// ===== INICIALIZACIÓN =====
+
+// Asegurar que la función de logging esté disponible globalmente
+if (!function_exists('flowtitude_debug_log')) {
+    function flowtitude_debug_log($message, $type = 'info', $context = 'flowtitude') {
+        // Fallback simple - solo si el logging está explícitamente activado
+        $security_settings = get_option('flowtitude_security_settings', []);
+        $logging_enabled = !empty($security_settings['wp_debug']) || 
+                          !empty($security_settings['wp_debug_log']) || 
+                          !empty($security_settings['log_hooks']);
+        
+        if ($logging_enabled && defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('[Flowtitude ' . strtoupper($type) . '] [' . $context . '] ' . $message);
+        }
     }
 }

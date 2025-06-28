@@ -2,6 +2,11 @@
 if (!defined('ABSPATH')) exit;
 
 /**
+ * Cargar configuración de rutas dinámicas
+ */
+require_once FLOWTITUDE_DIR . '/inc/settings/paths-config.php';
+
+/**
  * Carga los snippets y componentes activos seleccionados desde el panel.
  *
  * @return void
@@ -28,7 +33,7 @@ function flowtitude_load_active_snippets() {
     ];
 
     foreach ($system_snippets as $file) {
-        $path = FLOWTITUDE_DIR . '/snippets/' . $file;
+        $path = flowtitude_get_path('theme.snippets') . '/' . $file;
         if (file_exists($path)) {
             include_once $path;
         }
@@ -66,32 +71,32 @@ function flowtitude_load_active_snippets() {
  * Carga los componentes activos de Bricks
  */
 function flowtitude_load_active_bricks() {
-    error_log('Flowtitude: Iniciando carga de componentes activos de Bricks');
+    flowtitude_debug_log('Iniciando carga de componentes activos de Bricks', 'info', 'bricks');
     // Registro de rutas REST para BRICKS
     add_action('rest_api_init', function () {
         register_rest_route('flowtitude/v1', '/bricks', [
             'methods' => 'GET',
             'callback' => function () {
                 try {
-                    error_log('Flowtitude: Iniciando llamada al endpoint GET /bricks');
+                    flowtitude_debug_log('Iniciando llamada al endpoint GET /bricks', 'debug', 'bricks');
                     
                     if (!current_user_can('manage_options')) {
-                        error_log('Flowtitude: Usuario no tiene permisos para acceder a /bricks');
+                        flowtitude_debug_log('Usuario no tiene permisos para acceder a /bricks', 'warning', 'bricks');
                         return new WP_Error('forbidden', 'No tienes permisos para acceder a este endpoint', ['status' => 403]);
                     }
                     
                     $response = flowtitude_get_bricks_components();
                     
                     if (is_wp_error($response)) {
-                        error_log('Flowtitude: Error al obtener componentes: ' . $response->get_error_message());
+                        flowtitude_debug_log('Error al obtener componentes: ' . $response->get_error_message(), 'error', 'bricks');
                         return $response;
                     }
                     
-                    error_log('Flowtitude: Respuesta del endpoint /bricks: ' . print_r($response, true));
+                    flowtitude_debug_log('Respuesta del endpoint /bricks: ' . print_r($response, true), 'debug', 'bricks');
                     return rest_ensure_response($response);
                     
                 } catch (Exception $e) {
-                    error_log('Flowtitude: Excepción en endpoint /bricks: ' . $e->getMessage());
+                    flowtitude_debug_log('Excepción en endpoint /bricks: ' . $e->getMessage(), 'error', 'bricks');
                     return new WP_Error('server_error', 'Error interno del servidor', ['status' => 500]);
                 }
             },
@@ -104,10 +109,10 @@ function flowtitude_load_active_bricks() {
             'methods' => 'POST',
             'callback' => function ($request) {
                 try {
-                    error_log('Flowtitude: Iniciando llamada al endpoint POST /bricks');
+                    flowtitude_debug_log('Iniciando llamada al endpoint POST /bricks', 'debug', 'bricks');
                     
                     if (!current_user_can('manage_options')) {
-                        error_log('Flowtitude: Usuario no tiene permisos para acceder a POST /bricks');
+                        flowtitude_debug_log('Usuario no tiene permisos para acceder a POST /bricks', 'warning', 'bricks');
                         return new WP_Error('forbidden', 'No tienes permisos para acceder a este endpoint', ['status' => 403]);
                     }
                     
@@ -119,14 +124,14 @@ function flowtitude_load_active_bricks() {
                     $result = flowtitude_save_bricks_components($params);
                     
                     if (is_wp_error($result)) {
-                        error_log('Flowtitude: Error al guardar componentes: ' . $result->get_error_message());
+                        flowtitude_debug_log('Error al guardar componentes: ' . $result->get_error_message(), 'error', 'bricks');
                         return $result;
                     }
                     
                     return rest_ensure_response(['success' => true]);
                     
                 } catch (Exception $e) {
-                    error_log('Flowtitude: Excepción en endpoint POST /bricks: ' . $e->getMessage());
+                    flowtitude_debug_log('Excepción en endpoint POST /bricks: ' . $e->getMessage(), 'error', 'bricks');
                     return new WP_Error('server_error', 'Error interno del servidor', ['status' => 500]);
                 }
             },
@@ -142,11 +147,11 @@ function flowtitude_load_active_bricks() {
     
     if (!is_array($active_components)) {
         $active_components = [];
-        error_log('Flowtitude: No hay componentes activos de Bricks o el formato es incorrecto');
+        flowtitude_debug_log('No hay componentes activos de Bricks o el formato es incorrecto', 'warning', 'bricks');
         return;
     }
     
-    error_log('Flowtitude: Cargando ' . count($active_components) . ' componentes activos de Bricks');
+    flowtitude_debug_log('Cargando ' . count($active_components) . ' componentes activos de Bricks', 'info', 'bricks');
     
     foreach ($active_components as $file) {
         // Preservar la estructura de carpetas
@@ -168,7 +173,7 @@ function flowtitude_load_active_bricks() {
             }
             
             if (!$found) {
-                error_log('Flowtitude: No se pudo encontrar el componente de Bricks: ' . $file);
+                flowtitude_debug_log('No se pudo encontrar el componente de Bricks: ' . $file, 'warning', 'bricks');
                 continue;
             }
         }
@@ -178,12 +183,12 @@ function flowtitude_load_active_bricks() {
         $real_bricks_dir = realpath($bricks_dir);
         
         if ($real_path && file_exists($real_path) && strpos($real_path, $real_bricks_dir) === 0) {
-            error_log('Flowtitude: Cargando componente de Bricks: ' . $real_path);
+            flowtitude_debug_log('Cargando componente de Bricks: ' . $real_path, 'debug', 'bricks');
             include_once $real_path;
         } else {
-            error_log('Flowtitude: No se pudo cargar el componente de Bricks: ' . $path);
-            error_log("Flowtitude: Ruta real: {$real_path}");
-            error_log("Flowtitude: Directorio base: {$real_bricks_dir}");
+            flowtitude_debug_log('No se pudo cargar el componente de Bricks: ' . $path, 'warning', 'bricks');
+            flowtitude_debug_log("Ruta real: {$real_path}", 'debug', 'bricks');
+            flowtitude_debug_log("Directorio base: {$real_bricks_dir}", 'debug', 'bricks');
         }
     }
 }
@@ -271,7 +276,7 @@ function flowtitude_get_bricks_components() {
                 // Si se especificó una carpeta en el comentario, verificar que sea válida
                 if (!empty($folder) && !in_array($folder, $allowed_folders)) {
                     // Si la carpeta no es válida, ignorar este componente y continuar con el siguiente
-                    error_log('Flowtitude: Carpeta no válida especificada en el componente ' . $filename . ': ' . $folder);
+                    flowtitude_debug_log('Flowtitude: Carpeta no válida especificada en el componente ' . $filename . ': ' . $folder, 'warning', 'bricks');
                     continue;
                 }
                 
@@ -298,7 +303,7 @@ function flowtitude_get_bricks_components() {
             'active' => $active_components
         ];
     } catch (Exception $e) {
-        error_log('Flowtitude: Error al obtener componentes de Bricks: ' . $e->getMessage());
+        flowtitude_debug_log('Flowtitude: Error al obtener componentes de Bricks: ' . $e->getMessage(), 'error', 'bricks');
         return new WP_Error('error', 'Error al obtener componentes', ['status' => 500]);
     }
 }
@@ -329,7 +334,7 @@ function flowtitude_save_bricks_components($active_components) {
         update_option('flowtitude_active_bricks', $valid_components);
         return true;
     } catch (Exception $e) {
-        error_log('Flowtitude: Error al guardar componentes de Bricks: ' . $e->getMessage());
+        flowtitude_debug_log('Flowtitude: Error al guardar componentes de Bricks: ' . $e->getMessage(), 'error', 'bricks');
         return new WP_Error('error', 'Error al guardar componentes', ['status' => 500]);
     }
 }
