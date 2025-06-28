@@ -56,7 +56,18 @@ function flowtitude_register_bricks_components() {
             }
             continue;
         }
-        require_once $component_file;
+        
+        if (function_exists('flowtitude_safe_require')) {
+            if (!flowtitude_safe_require($component_file, 'bricks-component')) {
+                if (function_exists('flowtitude_debug_log')) {
+                    flowtitude_debug_log('No se pudo cargar el archivo del componente: ' . $component_file, 'warning');
+                }
+                continue;
+            }
+        } else {
+            require_once $component_file;
+        }
+        
         if (class_exists($class)) {
             \Bricks\Elements::register_element($class);
             if (function_exists('flowtitude_debug_log')) {

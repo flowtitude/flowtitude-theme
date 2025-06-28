@@ -98,8 +98,6 @@ class Flowtitude_Paths_Config {
                 'flowtitude_css' => $upload_dir['basedir'] . '/windpress/data/theme/flowtitude.css',
                 'flowtitude_css_url' => $upload_dir['baseurl'] . '/windpress/data/theme/flowtitude.css',
                 'tailwind_config' => get_template_directory() . '/tailwind.config.js',
-                'dashboard_fixes' => get_template_directory() . '/admin-panel/css/dashboard-fixes.css',
-                'dashboard_fixes_url' => get_template_directory_uri() . '/admin-panel/css/dashboard-fixes.css',
             ]
         ];
         

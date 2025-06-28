@@ -673,24 +673,60 @@ function flowtitude_save_design_settings($request) {
 
 function flowtitude_generate_design_css() {
 	$settings = get_option('flowtitude_design_settings', []);
-	if (!is_array($settings)) return;
-
-	$css = "@layer base {\n  :root {\n";
-
-	foreach ($settings as $key => $value) {
-		$sanitized_key = preg_replace('/[^a-zA-Z0-9\-\_]/', '', $key);
-		$css .= "    {$sanitized_key}: {$value};\n";
+	
+	if (empty($settings)) {
+		return rest_ensure_response([
+			'success' => false,
+			'message' => 'No hay configuraciones de diseño para generar CSS.'
+		]);
 	}
-
-	$css .= "  }\n}";
-
-	$path = get_stylesheet_directory() . '/assets/css/generated/flowtitude-vars.css';
-
-	if (!file_exists(dirname($path))) {
-		mkdir(dirname($path), 0755, true);
+	
+	// Generar CSS basado en las configuraciones
+	$css = "/* CSS generado automáticamente por Flowtitude */\n";
+	$css .= ":root {\n";
+	
+	// Variables CSS personalizadas
+	if (!empty($settings['primary_color'])) {
+		$css .= "  --flowtitude-primary: " . sanitize_hex_color($settings['primary_color']) . ";\n";
 	}
-
-	file_put_contents($path, $css);
+	if (!empty($settings['secondary_color'])) {
+		$css .= "  --flowtitude-secondary: " . sanitize_hex_color($settings['secondary_color']) . ";\n";
+	}
+	if (!empty($settings['accent_color'])) {
+		$css .= "  --flowtitude-accent: " . sanitize_hex_color($settings['accent_color']) . ";\n";
+	}
+	
+	$css .= "}\n\n";
+	
+	// Estilos adicionales
+	if (!empty($settings['custom_css'])) {
+		$css .= "/* Estilos personalizados */\n";
+		$css .= $settings['custom_css'] . "\n";
+	}
+	
+	// Guardar el CSS generado
+	$upload_dir = wp_upload_dir();
+	$css_dir = $upload_dir['basedir'] . '/flowtitude/css';
+	
+	if (!file_exists($css_dir)) {
+		wp_mkdir_p($css_dir);
+	}
+	
+	$css_file = $css_dir . '/generated.css';
+	$success = file_put_contents($css_file, $css);
+	
+	if ($success === false) {
+		return rest_ensure_response([
+			'success' => false,
+			'message' => 'Error al guardar el archivo CSS.'
+		]);
+	}
+	
+	return rest_ensure_response([
+		'success' => true,
+		'message' => 'CSS generado correctamente.',
+		'css_url' => $upload_dir['baseurl'] . '/flowtitude/css/generated.css'
+	]);
 }
 
 // === SEGURIDAD & OPTIMIZACIÓN ===
@@ -1053,7 +1089,11 @@ function flowtitude_load_snippets() {
 
 		foreach ($iterator as $file) {
 			if ($file->isFile() && $file->getExtension() === 'php') {
-				require_once $file->getPathname();
+				if (function_exists('flowtitude_safe_include')) {
+					flowtitude_safe_include($file->getPathname(), 'system-snippets');
+				} else {
+					require_once $file->getPathname();
+				}
 			}
 		}
 	}
@@ -1069,7 +1109,11 @@ function flowtitude_load_snippets() {
 		foreach ($active_snippets as $file) {
 			$path = flowtitude_get_snippet_path($file, false);
 			if ($path && file_exists($path) && strpos($path, $custom_dir) === 0) {
-				require_once $path;
+				if (function_exists('flowtitude_safe_include')) {
+					flowtitude_safe_include($path, 'custom-snippets');
+				} else {
+					require_once $path;
+				}
 			}
 		}
 	}

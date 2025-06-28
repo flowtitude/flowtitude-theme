@@ -2,7 +2,11 @@
 if (!defined('ABSPATH')) exit;
 
 if (file_exists(__DIR__ . '/inc/settings/paths-config.php')) {
-	require_once __DIR__ . '/inc/settings/paths-config.php';
+	if (function_exists('flowtitude_safe_require')) {
+		flowtitude_safe_require(__DIR__ . '/inc/settings/paths-config.php', 'paths');
+	} else {
+		require_once __DIR__ . '/inc/settings/paths-config.php';
+	}
 }
 
 /**
@@ -48,7 +52,11 @@ function flowtitude_warning_log($message, $context = '') {
 
 // Carga el archivo principal del tema
 if (file_exists(__DIR__ . '/flowtitude-v2.php')) {
-	require_once __DIR__ . '/flowtitude-v2.php';
+	if (function_exists('flowtitude_safe_require')) {
+		flowtitude_safe_require(__DIR__ . '/flowtitude-v2.php', 'main');
+	} else {
+		require_once __DIR__ . '/flowtitude-v2.php';
+	}
 } else {
 	flowtitude_debug_log('Archivo esencial flowtitude-v2.php no encontrado', 'warning');
 }

@@ -64,14 +64,27 @@ if (flowtitude_check_requirements()) {
         FLOWTITUDE_DIR . '/inc/core/loader.php'
     ];
     foreach ($core_files as $file) {
-        if (file_exists($file)) {
-            require_once $file;
-            if (function_exists('flowtitude_debug_log')) {
-                flowtitude_debug_log('Archivo core cargado: ' . $file, 'success');
+        if (function_exists('flowtitude_safe_require')) {
+            if (flowtitude_safe_require($file, 'core')) {
+                if (function_exists('flowtitude_debug_log')) {
+                    flowtitude_debug_log('Archivo core cargado: ' . $file, 'success');
+                }
+            } else {
+                if (function_exists('flowtitude_debug_log')) {
+                    flowtitude_debug_log('No se pudo cargar el archivo core: ' . $file, 'warning');
+                }
             }
         } else {
-            if (function_exists('flowtitude_debug_log')) {
-                flowtitude_debug_log('No se encontró el archivo core: ' . $file, 'warning');
+            // Fallback sin validación
+            if (file_exists($file)) {
+                require_once $file;
+                if (function_exists('flowtitude_debug_log')) {
+                    flowtitude_debug_log('Archivo core cargado: ' . $file, 'success');
+                }
+            } else {
+                if (function_exists('flowtitude_debug_log')) {
+                    flowtitude_debug_log('No se encontró el archivo core: ' . $file, 'warning');
+                }
             }
         }
     }

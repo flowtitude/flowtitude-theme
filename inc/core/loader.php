@@ -35,7 +35,11 @@ function flowtitude_load_active_snippets() {
     foreach ($system_snippets as $file) {
         $path = flowtitude_get_path('theme.snippets') . '/' . $file;
         if (file_exists($path)) {
-            include_once $path;
+            if (function_exists('flowtitude_safe_include')) {
+                flowtitude_safe_include($path, 'system-snippets');
+            } else {
+                include_once $path;
+            }
         }
     }
 
@@ -57,7 +61,11 @@ function flowtitude_load_active_snippets() {
         $real_snippet_dir = realpath($snippet_dir);
         
         if ($real_path && file_exists($real_path) && strpos($real_path, $real_snippet_dir) === 0) {
-            include_once $real_path;
+            if (function_exists('flowtitude_safe_include')) {
+                flowtitude_safe_include($real_path, 'custom-snippets');
+            } else {
+                include_once $real_path;
+            }
             flowtitude_debug_log("Snippet cargado correctamente: {$real_path}", 'success');
         } else {
             flowtitude_debug_log("No se pudo cargar el snippet: {$file}", 'warning');
@@ -71,77 +79,11 @@ function flowtitude_load_active_snippets() {
  * Carga los componentes activos de Bricks
  */
 function flowtitude_load_active_bricks() {
-    flowtitude_debug_log('Iniciando carga de componentes activos de Bricks', 'info', 'bricks');
-    // Registro de rutas REST para BRICKS
-    add_action('rest_api_init', function () {
-        register_rest_route('flowtitude/v1', '/bricks', [
-            'methods' => 'GET',
-            'callback' => function () {
-                try {
-                    flowtitude_debug_log('Iniciando llamada al endpoint GET /bricks', 'debug', 'bricks');
-                    
-                    if (!current_user_can('manage_options')) {
-                        flowtitude_debug_log('Usuario no tiene permisos para acceder a /bricks', 'warning', 'bricks');
-                        return new WP_Error('forbidden', 'No tienes permisos para acceder a este endpoint', ['status' => 403]);
-                    }
-                    
-                    $response = flowtitude_get_bricks_components();
-                    
-                    if (is_wp_error($response)) {
-                        flowtitude_debug_log('Error al obtener componentes: ' . $response->get_error_message(), 'error', 'bricks');
-                        return $response;
-                    }
-                    
-                    flowtitude_debug_log('Respuesta del endpoint /bricks: ' . print_r($response, true), 'debug', 'bricks');
-                    return rest_ensure_response($response);
-                    
-                } catch (Exception $e) {
-                    flowtitude_debug_log('Excepción en endpoint /bricks: ' . $e->getMessage(), 'error', 'bricks');
-                    return new WP_Error('server_error', 'Error interno del servidor', ['status' => 500]);
-                }
-            },
-            'permission_callback' => function () {
-                return current_user_can('manage_options');
-            }
-        ]);
-
-        register_rest_route('flowtitude/v1', '/bricks', [
-            'methods' => 'POST',
-            'callback' => function ($request) {
-                try {
-                    flowtitude_debug_log('Iniciando llamada al endpoint POST /bricks', 'debug', 'bricks');
-                    
-                    if (!current_user_can('manage_options')) {
-                        flowtitude_debug_log('Usuario no tiene permisos para acceder a POST /bricks', 'warning', 'bricks');
-                        return new WP_Error('forbidden', 'No tienes permisos para acceder a este endpoint', ['status' => 403]);
-                    }
-                    
-                    $params = $request->get_json_params();
-                    if (!is_array($params)) {
-                        return new WP_Error('invalid_params', 'Parámetros inválidos', ['status' => 400]);
-                    }
-                    
-                    $result = flowtitude_save_bricks_components($params);
-                    
-                    if (is_wp_error($result)) {
-                        flowtitude_debug_log('Error al guardar componentes: ' . $result->get_error_message(), 'error', 'bricks');
-                        return $result;
-                    }
-                    
-                    return rest_ensure_response(['success' => true]);
-                    
-                } catch (Exception $e) {
-                    flowtitude_debug_log('Excepción en endpoint POST /bricks: ' . $e->getMessage(), 'error', 'bricks');
-                    return new WP_Error('server_error', 'Error interno del servidor', ['status' => 500]);
-                }
-            },
-            'permission_callback' => function () {
-                return current_user_can('manage_options');
-            }
-        ]);
-    });
-
-    // Carga de componentes activos
+    if (!class_exists('Bricks\Elements')) {
+        flowtitude_debug_log('Bricks no está disponible, omitiendo carga de componentes', 'info', 'bricks');
+        return;
+    }
+    
     $bricks_dir = flowtitude_get_custom_dir('bricks');
     $active_components = get_option('flowtitude_active_bricks', []);
     
@@ -184,157 +126,85 @@ function flowtitude_load_active_bricks() {
         
         if ($real_path && file_exists($real_path) && strpos($real_path, $real_bricks_dir) === 0) {
             flowtitude_debug_log('Cargando componente de Bricks: ' . $real_path, 'debug', 'bricks');
-            include_once $real_path;
+            if (function_exists('flowtitude_safe_include')) {
+                flowtitude_safe_include($real_path, 'bricks-components');
+            } else {
+                include_once $real_path;
+            }
         } else {
-            flowtitude_debug_log('No se pudo cargar el componente de Bricks: ' . $path, 'warning', 'bricks');
-            flowtitude_debug_log("Ruta real: {$real_path}", 'debug', 'bricks');
-            flowtitude_debug_log("Directorio base: {$real_bricks_dir}", 'debug', 'bricks');
+            flowtitude_debug_log('No se pudo cargar el componente de Bricks: ' . $file, 'warning', 'bricks');
+            flowtitude_debug_log('Ruta real: ' . $real_path, 'debug', 'bricks');
+            flowtitude_debug_log('Directorio base: ' . $real_bricks_dir, 'debug', 'bricks');
         }
     }
 }
 
 /**
- * Obtiene los componentes de Bricks disponibles y activos
- * @return array Array con los componentes disponibles y activos
+ * Obtiene la lista de componentes de Bricks disponibles
+ * 
+ * @return array Array con los componentes organizados por tipo
  */
 function flowtitude_get_bricks_components() {
-    try {
-        $bricks_dir = flowtitude_get_custom_dir('bricks');
-        $active_components = get_option('flowtitude_active_bricks', []);
+    $bricks_dir = flowtitude_get_custom_dir('bricks');
+    $components = [];
+    
+    if (!file_exists($bricks_dir)) {
+        return $components;
+    }
+    
+    $component_types = ['custom-elements', 'dynamic-tags', 'conditionals'];
+    
+    foreach ($component_types as $type) {
+        $type_dir = $bricks_dir . '/' . $type;
+        $components[$type] = [];
         
-        if (!is_array($active_components)) {
-            $active_components = [];
+        if (!file_exists($type_dir)) {
+            wp_mkdir_p($type_dir);
+            continue;
         }
         
-        $component_types = ['custom-elements', 'dynamic-tags', 'conditionals'];
-        $components = [];
+        $files = glob($type_dir . '/*.php');
         
-        foreach ($component_types as $type) {
-            $type_dir = $bricks_dir . '/' . $type;
-            $components[$type] = [];
+        foreach ($files as $file) {
+            $filename = basename($file);
+            $relative_path = $type . '/' . $filename;
             
-            if (!file_exists($type_dir)) {
-                wp_mkdir_p($type_dir);
-                continue;
-            }
+            // Leer el contenido del archivo para extraer título y descripción
+            $content = file_get_contents($file);
+            $title = $filename;
+            $description = '';
             
-            $files = glob($type_dir . '/*.php');
+            // Extraer título, descripción y carpeta del comentario del archivo
+            // Primero intentar con comentarios de una línea (estilo // Título)
+            $lines = explode("\n", $content);
+            $folder = ''; // Valor por defecto para la carpeta
             
-            foreach ($files as $file) {
-                $filename = basename($file);
-                $relative_path = $type . '/' . $filename;
-                
-                // Leer el contenido del archivo para extraer título y descripción
-                $content = file_get_contents($file);
-                $title = $filename;
-                $description = '';
-                
-                // Extraer título, descripción y carpeta del comentario del archivo
-                // Primero intentar con comentarios de una línea (estilo // Título)
-                $lines = explode("\n", $content);
-                $folder = ''; // Valor por defecto para la carpeta
-                
-                foreach ($lines as $index => $line) {
-                    if (preg_match('/^\/\/\s*(.+)$/', trim($line), $matches)) {
-                        $title = trim($matches[1]);
-                        
-                        // Buscar la siguiente línea para la descripción
-                        if (isset($lines[$index + 1]) && preg_match('/^\/\/\s*(.+)$/', trim($lines[$index + 1]), $desc_matches)) {
-                            $description = trim($desc_matches[1]);
-                            
-                            // Buscar la tercera línea para la carpeta
-                            if (isset($lines[$index + 2]) && preg_match('/^\/\/\s*(.+)$/', trim($lines[$index + 2]), $folder_matches)) {
-                                $folder = trim($folder_matches[1]);
-                            }
-                        }
-                        break;
-                    }
-                }
-                
-                // Si no se encuentra en comentarios de una línea, intentar con DocBlock
-                if ($title === $filename) {
-                    if (preg_match('/\/\*\*\s*\n\s*\*\s*(.+?)\s*\n/s', $content, $matches)) {
-                        $title = trim($matches[1]);
-                    }
+            foreach ($lines as $index => $line) {
+                if (preg_match('/^\/\/\s*(.+)$/', trim($line), $matches)) {
+                    $title = trim($matches[1]);
                     
-                    // Buscar descripción en el segundo comentario
-                    if (preg_match('/\*\s*(.+?)\s*\n\s*\*\s*(.+?)\s*\n/s', $content, $matches)) {
-                        $description = trim($matches[1]);
+                    // Buscar la siguiente línea para la descripción
+                    if (isset($lines[$index + 1]) && preg_match('/^\/\/\s*(.+)$/', trim($lines[$index + 1]), $desc_matches)) {
+                        $description = trim($desc_matches[1]);
                         
-                        // Buscar carpeta en el tercer comentario
-                        if (isset($matches[2])) {
-                            $folder = trim($matches[2]);
+                        // Buscar la tercera línea para la carpeta
+                        if (isset($lines[$index + 2]) && preg_match('/^\/\/\s*(.+)$/', trim($lines[$index + 2]), $folder_matches)) {
+                            $folder = trim($folder_matches[1]);
                         }
-                    } else if (preg_match('/\*\s*(.+?)\s*\n\s*\*\//s', $content, $matches)) {
-                        $description = trim($matches[1]);
                     }
+                    break;
                 }
-                
-                // Validar que la carpeta especificada sea una de las permitidas
-                $allowed_folders = ['custom-elements', 'dynamic-tags', 'conditionals'];
-                
-                // Si se especificó una carpeta en el comentario, verificar que sea válida
-                if (!empty($folder) && !in_array($folder, $allowed_folders)) {
-                    // Si la carpeta no es válida, ignorar este componente y continuar con el siguiente
-                    flowtitude_debug_log('Flowtitude: Carpeta no válida especificada en el componente ' . $filename . ': ' . $folder, 'warning', 'bricks');
-                    continue;
-                }
-                
-                // Usar la carpeta especificada o el tipo predeterminado
-                $target_type = !empty($folder) ? $folder : $type;
-                
-                // Asegurarse de que existe la categoría en el array de componentes
-                if (!isset($components[$target_type])) {
-                    $components[$target_type] = [];                    
-                }
-                
-                $components[$target_type][] = [
-                    'file' => $relative_path,
-                    'title' => $title,
-                    'description' => $description,
-                    'folder' => $folder, // Guardar la carpeta especificada
-                    'active' => in_array($relative_path, $active_components)
-                ];
             }
+            
+            $components[$type][] = [
+                'file' => $relative_path,
+                'name' => $title,
+                'description' => $description,
+                'folder' => $folder,
+                'type' => $type
+            ];
         }
-        
-        return [
-            'components' => $components,
-            'active' => $active_components
-        ];
-    } catch (Exception $e) {
-        flowtitude_debug_log('Flowtitude: Error al obtener componentes de Bricks: ' . $e->getMessage(), 'error', 'bricks');
-        return new WP_Error('error', 'Error al obtener componentes', ['status' => 500]);
     }
-}
-
-/**
- * Guarda los componentes activos de Bricks
- * @param array $active_components Array con los componentes activos
- * @return bool|WP_Error True si se guardó correctamente, WP_Error en caso contrario
- */
-function flowtitude_save_bricks_components($active_components) {
-    try {
-        if (!is_array($active_components)) {
-            return new WP_Error('invalid_data', 'Los datos proporcionados no son válidos', ['status' => 400]);
-        }
-        
-        // Filtrar para asegurarse de que solo se guarden rutas válidas
-        $bricks_dir = flowtitude_get_custom_dir('bricks');
-        $valid_components = [];
-        
-        foreach ($active_components as $component) {
-            // Verificar que el componente existe
-            $component_path = $bricks_dir . '/' . $component;
-            if (file_exists($component_path)) {
-                $valid_components[] = $component;
-            }
-        }
-        
-        update_option('flowtitude_active_bricks', $valid_components);
-        return true;
-    } catch (Exception $e) {
-        flowtitude_debug_log('Flowtitude: Error al guardar componentes de Bricks: ' . $e->getMessage(), 'error', 'bricks');
-        return new WP_Error('error', 'Error al guardar componentes', ['status' => 500]);
-    }
+    
+    return $components;
 }

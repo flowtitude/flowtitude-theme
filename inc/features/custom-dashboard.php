@@ -54,9 +54,11 @@ function flowtitude_display_custom_dashboard_metabox() {
         ob_start();
         do_action('wp_footer');
         $frontend_footer = ob_get_clean();
+        echo '<div class="ft-dashboard">';
         echo $frontend_head . $extra_resources;
         echo do_shortcode('[bricks_template id="' . $template_id . '"]');
         echo $frontend_footer;
+        echo '</div>';
     }
 }
 
@@ -146,13 +148,8 @@ function procesar_etiquetas_dinamicas_dashboard($tag, $post = null, $context = '
 }
 
 function encolar_bricks_assets_dashboard() {
-    // Asegúrate de que los scripts de Bricks estén disponibles
-    if (!wp_script_is('bricks-builder', 'enqueued')) {
-        wp_enqueue_script('bricks-builder', get_template_directory_uri() . '/path/to/bricks-builder.js', array('jquery'), null, true);
-    }
-    if (!wp_style_is('bricks-builder', 'enqueued')) {
-        wp_enqueue_style('bricks-builder', get_template_directory_uri() . '/path/to/bricks-builder.css', array(), null);
-    }
+    // Los assets de Bricks se cargan automáticamente por el plugin
+    // No necesitamos encolar archivos adicionales
 }
 add_action('admin_enqueue_scripts', 'encolar_bricks_assets_dashboard');
 
@@ -254,4 +251,60 @@ class DashboardDynamicTagProcessor {
 
 // Reemplazar el uso directo de la función por la clase
 add_filter('bricks/dynamic_data/render_content', ['DashboardDynamicTagProcessor', 'process_tags'], 20, 2);
-add_filter('bricks/frontend/render_data', ['DashboardDynamicTagProcessor', 'process_tags'], 20, 2); 
+add_filter('bricks/frontend/render_data', ['DashboardDynamicTagProcessor', 'process_tags'], 20, 2);
+
+// Eliminar widgets/metaboxes nativos pero dejar el personalizado
+add_action('wp_dashboard_setup', function() {
+    global $wp_meta_boxes;
+    // Elimina todos los metaboxes excepto el personalizado
+    if (isset($wp_meta_boxes['dashboard'])) {
+        foreach ($wp_meta_boxes['dashboard'] as $context => &$types) {
+            foreach ($types as $type => &$boxes) {
+                foreach ($boxes as $id => $box) {
+                    if ($id !== 'flowtitude_custom_dashboard_metabox') {
+                        unset($boxes[$id]);
+                    }
+                }
+            }
+        }
+    }
+}, 100);
+
+// Quitar título y marco del metabox personalizado y hacerlo ancho completo
+add_action('admin_head', function() {
+    $screen = get_current_screen();
+    if ($screen && $screen->id === 'dashboard') {
+        echo '<style>
+            #flowtitude_custom_dashboard_metabox .hndle, /* Título del metabox */
+            #flowtitude_custom_dashboard_metabox .handle-actions, /* Acciones del metabox */
+            #flowtitude_custom_dashboard_metabox .postbox-header {
+                display: none !important;
+            }
+            #flowtitude_custom_dashboard_metabox.postbox {
+                box-shadow: none !important;
+                border: none !important;
+                background: transparent !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            #dashboard-widgets .postbox {
+                margin-bottom: 0 !important;
+            }
+            #dashboard-widgets {
+                padding: 0 !important;
+            }
+            /* Ancho completo */
+            #flowtitude_custom_dashboard_metabox .inside {
+                padding: 0 !important;
+            }
+            #flowtitude_custom_dashboard_metabox {
+                width: 100% !important;
+                max-width: 100vw !important;
+            }
+            /* Restaurar fuente original para el admin */
+            body.wp-admin {
+                font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,sans-serif !important;
+            }
+        </style>';
+    }
+}, 100); 

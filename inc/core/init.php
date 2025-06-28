@@ -6,6 +6,16 @@ if (!defined('DISALLOW_FILE_EDIT')) {
 	define('DISALLOW_FILE_EDIT', true);
 }
 
+// === CARGA DEL VALIDADOR DE ARCHIVOS ===
+if (file_exists(FLOWTITUDE_DIR . '/inc/core/file-validator.php')) {
+	require_once FLOWTITUDE_DIR . '/inc/core/file-validator.php';
+} else {
+	// Fallback si no existe el validador
+	if (function_exists('flowtitude_debug_log')) {
+		flowtitude_debug_log('Sistema de validación de archivos no encontrado', 'error');
+	}
+}
+
 // === CARGA DE AJUSTES Y ENDPOINTS ===
 if (!defined('FLOWTITUDE_DIR')) {
 	if (function_exists('flowtitude_debug_log')) {
@@ -14,10 +24,29 @@ if (!defined('FLOWTITUDE_DIR')) {
 	exit;
 }
 
-require_once FLOWTITUDE_DIR . '/inc/settings/defaults.php';
-require_once FLOWTITUDE_DIR . '/inc/settings/api-endpoints.php';
-require_once FLOWTITUDE_DIR . '/inc/settings/snippet-folders-endpoint.php';
-require_once FLOWTITUDE_DIR . '/inc/core/layered-css.php';
+// Cargar archivos core con validación
+$core_files = [
+	FLOWTITUDE_DIR . '/inc/settings/defaults.php',
+	FLOWTITUDE_DIR . '/inc/settings/api-endpoints.php',
+	FLOWTITUDE_DIR . '/inc/settings/snippet-folders-endpoint.php',
+	FLOWTITUDE_DIR . '/inc/core/layered-css.php'
+];
+
+foreach ($core_files as $file) {
+	if (function_exists('flowtitude_safe_require')) {
+		flowtitude_safe_require($file, 'core');
+	} else {
+		// Fallback sin validación
+		if (file_exists($file)) {
+			require_once $file;
+		}
+	}
+}
+
+// Actualizar directorios permitidos del validador después de cargar las funciones helper
+if (class_exists('Flowtitude_File_Validator')) {
+	Flowtitude_File_Validator::update_allowed_directories();
+}
 
 // === CARGA CONDICIONAL DE FUNCIONALIDADES ===
 $settings = get_option('flowtitude_settings', []);
@@ -30,7 +59,11 @@ if (function_exists('flowtitude_debug_log')) {
 $custom_dashboard_file = FLOWTITUDE_DIR . '/inc/features/custom-dashboard.php';
 if (file_exists($custom_dashboard_file)) {
 	flowtitude_debug_log('Cargando custom-dashboard.php', 'info', 'init');
-	require_once $custom_dashboard_file;
+	if (function_exists('flowtitude_safe_require')) {
+		flowtitude_safe_require($custom_dashboard_file, 'dashboard');
+	} else {
+		require_once $custom_dashboard_file;
+	}
 	flowtitude_debug_log('custom-dashboard.php cargado', 'info', 'init');
 }
 
@@ -39,7 +72,11 @@ $custom_provider_file = FLOWTITUDE_DIR . '/inc/features/custom-dynamic-provider.
 if (file_exists($custom_provider_file)) {
 	// Solo cargar si Bricks está disponible o si estamos en el admin
 	if (class_exists('Bricks\Integrations\Dynamic_Data\Providers\Base') || is_admin()) {
-		require_once $custom_provider_file;
+		if (function_exists('flowtitude_safe_require')) {
+			flowtitude_safe_require($custom_provider_file, 'provider');
+		} else {
+			require_once $custom_provider_file;
+		}
 		if (function_exists('flowtitude_debug_log')) {
 			flowtitude_debug_log('Proveedor de datos dinámicos personalizado cargado: ' . $custom_provider_file, 'success');
 		}
@@ -73,7 +110,11 @@ foreach ($feature_map as $setting_key => [$relative_path, $desc]) {
 	if (!empty($settings[$setting_key])) {
 		$feature_file = FLOWTITUDE_DIR . '/' . $relative_path;
 		if (file_exists($feature_file)) {
-			require_once $feature_file;
+			if (function_exists('flowtitude_safe_require')) {
+				flowtitude_safe_require($feature_file, $desc);
+			} else {
+				require_once $feature_file;
+			}
 			if (function_exists('flowtitude_debug_log')) {
 				flowtitude_debug_log("Funcionalidad cargada: $desc [$feature_file]", 'success');
 			}
@@ -91,15 +132,30 @@ $security_settings = get_option('flowtitude_security_settings', []);
 
 // Ocultar versión de WordPress
 if (!empty($security_settings['hide_wp_version'])) {
-	require_once FLOWTITUDE_DIR . '/inc/security/hide-wp-version.php';
+	$security_file = FLOWTITUDE_DIR . '/inc/security/hide-wp-version.php';
+	if (function_exists('flowtitude_safe_require')) {
+		flowtitude_safe_require($security_file, 'security');
+	} else {
+		require_once $security_file;
+	}
 }
 
 // Desactivar XML-RPC
 if (!empty($security_settings['disable_xmlrpc'])) {
-	require_once FLOWTITUDE_DIR . '/inc/security/disable-xmlrpc.php';
+	$security_file = FLOWTITUDE_DIR . '/inc/security/disable-xmlrpc.php';
+	if (function_exists('flowtitude_safe_require')) {
+		flowtitude_safe_require($security_file, 'security');
+	} else {
+		require_once $security_file;
+	}
 }
 
 // Seguridad en el login
 if (!empty($security_settings['secure_login'])) {
-	require_once FLOWTITUDE_DIR . '/inc/security/secure-login.php';
+	$security_file = FLOWTITUDE_DIR . '/inc/security/secure-login.php';
+	if (function_exists('flowtitude_safe_require')) {
+		flowtitude_safe_require($security_file, 'security');
+	} else {
+		require_once $security_file;
+	}
 }
