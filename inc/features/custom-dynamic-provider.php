@@ -1,9 +1,14 @@
 <?php
 namespace Flowtitude\Features;
 
-use Bricks\Integrations\Dynamic_Data\Providers\Base;
-
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
+
+// Solo cargar cuando Bricks esté disponible
+if ( ! class_exists( 'Bricks\Integrations\Dynamic_Data\Providers\Base' ) ) {
+    return;
+}
+
+use Bricks\Integrations\Dynamic_Data\Providers\Base;
 
 class Custom_Dynamic_Provider extends Base {
     /**
@@ -13,7 +18,9 @@ class Custom_Dynamic_Provider extends Base {
      */
     public function __construct( $name = 'custom' ) {
         parent::__construct( $name );
-        error_log('Custom_Dynamic_Provider initialized');
+        if (function_exists('flowtitude_debug_log')) {
+            flowtitude_debug_log('Custom_Dynamic_Provider initialized', 'info');
+        }
     }
 
     /**
@@ -28,7 +35,9 @@ class Custom_Dynamic_Provider extends Base {
                 'provider' => 'custom',
             ],
         ];
-        error_log('Custom tags registered');
+        if (function_exists('flowtitude_debug_log')) {
+            flowtitude_debug_log('Custom tags registered', 'info');
+        }
     }
 
     /**
@@ -41,18 +50,20 @@ class Custom_Dynamic_Provider extends Base {
      * @return array|string
      */
     public function get_tag_value( $tag, $post, $args, $context ) {
-        error_log('Getting tag value for: ' . $tag);
+        if (function_exists('flowtitude_debug_log')) {
+            flowtitude_debug_log('Getting tag value for: ' . $tag, 'debug');
+        }
         // Implement custom logic to return the tag value
         return 'Valor personalizado';
     }
 }
 
-// Register the custom provider
-add_action( 'after_setup_theme', function() {
+// Solo registrar cuando Bricks esté renderizando una plantilla
+add_action( 'bricks_before_render', function() {
     if ( class_exists( 'Bricks\Integrations\Dynamic_Data\Providers' ) ) {
-        error_log('Registering custom provider');
+        if (function_exists('flowtitude_debug_log')) {
+            flowtitude_debug_log('Registering custom provider for Bricks render', 'info');
+        }
         Bricks\Integrations\Dynamic_Data\Providers::register( [ 'custom' ] );
-    } else {
-        error_log('Bricks\Integrations\Dynamic_Data\Providers class not found');
     }
 }); 

@@ -34,6 +34,26 @@ if (file_exists($custom_dashboard_file)) {
 	error_log('Flowtitude: custom-dashboard.php cargado');
 }
 
+// Cargar el proveedor de datos dinámicos personalizado para Bricks
+$custom_provider_file = FLOWTITUDE_DIR . '/inc/features/custom-dynamic-provider.php';
+if (file_exists($custom_provider_file)) {
+	// Solo cargar si Bricks está disponible o si estamos en el admin
+	if (class_exists('Bricks\Integrations\Dynamic_Data\Providers\Base') || is_admin()) {
+		require_once $custom_provider_file;
+		if (function_exists('flowtitude_debug_log')) {
+			flowtitude_debug_log('Proveedor de datos dinámicos personalizado cargado: ' . $custom_provider_file, 'success');
+		}
+	} else {
+		if (function_exists('flowtitude_debug_log')) {
+			flowtitude_debug_log('Bricks no está disponible, omitiendo carga del proveedor de datos dinámicos', 'info');
+		}
+	}
+} else {
+	if (function_exists('flowtitude_debug_log')) {
+		flowtitude_debug_log('No se encontró el proveedor de datos dinámicos: ' . $custom_provider_file, 'warning');
+	}
+}
+
 /**
  * Carga condicional de módulos según los ajustes del usuario.
  * Se añade logging para trazabilidad y robustez.
