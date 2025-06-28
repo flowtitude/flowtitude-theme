@@ -419,17 +419,28 @@ add_action('init', 'flowtitude_apply_development_badges', 3);
  */
 function flowtitude_log_hooks() {
     $security_settings = flowtitude_get_security_settings();
-    
     if (!empty($security_settings['log_hooks'])) {
-        add_action('all', function($tag, $args) {
-            flowtitude_debug_log("Hook ejecutado: $tag", 'debug', 'hooks');
-        }, 10, 2);
-        
-        flowtitude_debug_log('Logging de hooks activado', 'info', 'hooks');
+        add_action('all', function() {
+            static $last_hook = '';
+            $hook = current_filter();
+            if ($hook !== $last_hook) {
+                $last_hook = $hook;
+                $log_file = WP_CONTENT_DIR . '/debug-hooks.log';
+                @file_put_contents($log_file, date('Y-m-d H:i:s') . " - $hook\n", FILE_APPEND);
+            }
+        }, 9999);
     }
 }
 
 add_action('init', 'flowtitude_log_hooks', 4);
+
+// Advertencia si el logging de hooks está activado
+add_action('admin_notices', function() {
+    $security_settings = flowtitude_get_security_settings();
+    if (!empty($security_settings['log_hooks'])) {
+        echo '<div class="notice notice-warning"><strong>Flowtitude:</strong> El logging de hooks está <b>ACTIVADO</b>. Esto puede generar archivos de log muy grandes y afectar el rendimiento. Recuerda desactivarlo en producción.</div>';
+    }
+});
 
 // ===== INICIALIZACIÓN =====
 
