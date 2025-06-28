@@ -804,7 +804,10 @@ add_action('rest_api_init', function () {
 			$params = $request->get_json_params();
 			$old_url = isset($params['old_url']) ? trim($params['old_url']) : '';
 			$new_url = isset($params['new_url']) ? trim($params['new_url']) : '';
-			if (!$old_url || !$new_url) return rest_ensure_response(['success' => false, 'message' => 'URLs no válidas']);
+			// Validación estricta de URLs
+			if (!filter_var($old_url, FILTER_VALIDATE_URL) || !filter_var($new_url, FILTER_VALIDATE_URL)) {
+				return rest_ensure_response(['success' => false, 'message' => 'Ambos parámetros deben ser URLs válidas.']);
+			}
 			// Backup antes de reemplazar
 			global $wpdb;
 			$backup_dir = WP_CONTENT_DIR . '/backups';
