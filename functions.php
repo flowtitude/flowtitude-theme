@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) exit;
  */
 // Función de depuración
 if (!defined('FLOWTITUDE_LOG')) define('FLOWTITUDE_LOG', false); // Cambia a true para depuración avanzada
-function flowtitude_debug_log($message, $type = 'info') {
+function lowtitude_file_log($message, $type = 'info') {
 	if ((defined('WP_DEBUG') && WP_DEBUG) && (defined('FLOWTITUDE_LOG') && FLOWTITUDE_LOG)) {
 		if (is_array($message) || is_object($message)) {
 			error_log('[Flowtitude ' . strtoupper($type) . '] ' . print_r($message, true));
