@@ -76,6 +76,7 @@ class Flowtitude_Bricks_Dynamic_Resolver {
         'Flowtitude_Provider_User',
         'Flowtitude_Provider_Site',
         'Flowtitude_Provider_ACF',
+        'Flowtitude_Provider_JetEngine',
         // Añade aquí más providers personalizados
     ];
 
