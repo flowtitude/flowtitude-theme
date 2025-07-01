@@ -70,8 +70,8 @@ if (file_exists($custom_dashboard_file)) {
 // Cargar el proveedor de datos dinámicos personalizado para Bricks
 $custom_provider_file = FLOWTITUDE_DIR . '/inc/features/custom-dynamic-provider.php';
 if (file_exists($custom_provider_file)) {
-	// Solo cargar si Bricks está disponible o si estamos en el admin
-	if (class_exists('Bricks\Integrations\Dynamic_Data\Providers\Base') || is_admin()) {
+	// Cargar SIEMPRE en el admin o si Bricks está disponible
+	if (is_admin() || class_exists('Bricks\Integrations\Dynamic_Data\Providers\Base')) {
 		if (function_exists('flowtitude_safe_require')) {
 			flowtitude_safe_require($custom_provider_file, 'provider');
 		} else {

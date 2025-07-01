@@ -66,4 +66,46 @@ add_action( 'bricks_before_render', function() {
         }
         Bricks\Integrations\Dynamic_Data\Providers::register( [ 'custom' ] );
     }
-}); 
+});
+
+/**
+ * Procesa etiquetas dinámicas de Bricks usando sus providers, incluso fuera del render nativo.
+ */
+class Flowtitude_Bricks_Dynamic_Resolver {
+    protected static $custom_providers = [
+        'Flowtitude_Provider_User',
+        'Flowtitude_Provider_Site',
+        'Flowtitude_Provider_ACF',
+        // Añade aquí más providers personalizados
+    ];
+
+    public static function parse($content, $context = []) {
+        // Cargar providers personalizados si no existen
+        foreach (self::$custom_providers as $provider) {
+            if (!class_exists($provider)) {
+                $file = __DIR__ . '/../dynamic-providers/' . strtolower(str_replace('Flowtitude_Provider_', 'provider-', $provider)) . '.php';
+                if (file_exists($file)) {
+                    require_once $file;
+                }
+            }
+        }
+        return preg_replace_callback('/{([^}]+)}/', function($matches) use ($context) {
+            $tag = $matches[1];
+            foreach (Flowtitude_Bricks_Dynamic_Resolver::$custom_providers as $provider) {
+                if (class_exists($provider) && method_exists($provider, 'get_tag_value')) {
+                    $value = $provider::get_tag_value($tag, $context);
+                    if ($value !== null) return $value;
+                }
+            }
+            return $matches[0];
+        }, $content);
+    }
+}
+
+// === Ejemplo de uso ===
+/*
+$post = get_post(123);
+$user = wp_get_current_user();
+$html = '<p>Bienvenido, {user_email}. Tu campo ACF: {acf.mi_campo}. Jet: {jetengine.mi_campo}</p>';
+echo Flowtitude_Bricks_Dynamic_Resolver::parse($html, ['user' => $user, 'post' => $post]);
+*/ 
