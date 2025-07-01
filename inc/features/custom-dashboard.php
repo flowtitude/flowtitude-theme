@@ -56,32 +56,68 @@ function flowtitude_display_custom_dashboard_metabox() {
         $frontend_footer = ob_get_clean();
         echo '<div class="ft-dashboard">';
         echo $frontend_head . $extra_resources;
-        echo do_shortcode('[bricks_template id="' . $template_id . '"]');
+        // DEBUG: Log antes de do_shortcode
+        if (function_exists('flowtitude_debug_log')) {
+            flowtitude_debug_log('DASHBOARD: Antes de do_shortcode para plantilla Bricks ID: ' . $template_id, 'debug', 'dashboard');
+        }
+        // Obtener el contenido de la plantilla Bricks
+        $content = do_shortcode('[bricks_template id="' . $template_id . '"]');
+        // DEBUG: Log del contenido original
+        if (function_exists('flowtitude_debug_log')) {
+            flowtitude_debug_log('DASHBOARD: Contenido original Bricks tras do_shortcode: ' . $content, 'debug', 'dashboard');
+        }
+        // Procesar etiquetas dinámicas usando el parser universal
+        if (class_exists('\Flowtitude\Features\Flowtitude_Bricks_Dynamic_Resolver')) {
+            $user = wp_get_current_user();
+            $post = get_post($template_id);
+            // DEBUG: Log de existencia de clase y estado del parser/providers
+            if (function_exists('flowtitude_debug_log')) {
+                flowtitude_debug_log('DASHBOARD: Flowtitude_Bricks_Dynamic_Resolver existe', 'debug', 'dashboard');
+            }
+            // DEBUG: Log de cada etiqueta encontrada y su valor procesado
+            $processed_content = $content;
+            if (preg_match_all('/{([^}]+)}/', $content, $matches)) {
+                foreach ($matches[1] as $tag) {
+                    $valor = \Flowtitude\Features\Flowtitude_Bricks_Dynamic_Resolver::parse('{' . $tag . '}', ['user' => $user, 'post' => $post]);
+                    if (function_exists('flowtitude_debug_log')) {
+                        flowtitude_debug_log('DASHBOARD: Etiqueta encontrada: {' . $tag . '} => ' . $valor, 'debug', 'dashboard');
+                    }
+                }
+            } else {
+                if (function_exists('flowtitude_debug_log')) {
+                    flowtitude_debug_log('DASHBOARD: No se encontraron etiquetas dinámicas en el contenido.', 'debug', 'dashboard');
+                }
+            }
+            // Procesar todo el contenido
+            $processed_content = \Flowtitude\Features\Flowtitude_Bricks_Dynamic_Resolver::parse($content, ['user' => $user, 'post' => $post]);
+            // DEBUG: Log del contenido procesado
+            if (function_exists('flowtitude_debug_log')) {
+                flowtitude_debug_log('DASHBOARD: Contenido procesado Bricks: ' . $processed_content, 'debug', 'dashboard');
+            }
+            $content = $processed_content;
+        } else {
+            if (function_exists('flowtitude_debug_log')) {
+                flowtitude_debug_log('DASHBOARD: La clase Flowtitude_Bricks_Dynamic_Resolver NO existe.', 'error', 'dashboard');
+            }
+        }
+        echo $content;
         echo $frontend_footer;
         echo '</div>';
+        // IMPORTANTE: Eliminar estos logs cuando se resuelva el problema de las etiquetas dinámicas.
     }
 }
 
 function flowtitude_enqueue_bricks_assets_admin() {
     $screen = get_current_screen();
     if ($screen && $screen->id === 'dashboard') {
-        // Verificar si estamos usando la plantilla de Bricks
-        $settings = get_option('flowtitude_settings', []);
-        $template_id = !empty($settings['custom_dashboard_template']) ? (int)$settings['custom_dashboard_template'] : 0;
-
-        if ($template_id) {
-            // Solo log si el logging está activado
-            if (function_exists('flowtitude_debug_log')) {
-                global $wp_styles;
-                flowtitude_debug_log('Estilos encolados: ' . implode(', ', $wp_styles->queue), 'debug', 'dashboard');
-            }
-        }
-
-        // Encolar Tailwind desde uploads (ruta absoluta fuera del tema)
+        // Encolar Tailwind desde uploads
         $tailwind_url = content_url('uploads/windpress/cache/tailwind.css');
         wp_enqueue_style('flowtitude-tailwind', $tailwind_url, [], null);
 
-        // Forzar estilos y scripts de Bricks
+        // Encolar solo el CSS del menú lateral del admin
+        wp_enqueue_style('admin-menu');
+
+        // Forzar estilos y scripts de Bricks si están registrados
         if (wp_style_is('bricks-frontend', 'registered')) {
             wp_enqueue_style('bricks-frontend');
         }
@@ -93,18 +129,15 @@ function flowtitude_enqueue_bricks_assets_admin() {
         }
 
         // Cargar el archivo de correcciones para la UI del admin.
-        $fixes_file_path = flowtitude_get_path('files.dashboard_fixes');
+        $fixes_file_path = get_stylesheet_directory() . '/admin-panel/css/dashboard-fixes.css';
         if (file_exists($fixes_file_path)) {
             wp_enqueue_style(
                 'flowtitude-dashboard-fixes',
-                flowtitude_get_path('files.dashboard_fixes', true),
-                ['flowtitude-tailwind', 'bricks-frontend'], // Asegurar que se cargue después
+                get_stylesheet_directory_uri() . '/admin-panel/css/dashboard-fixes.css',
+                ['flowtitude-tailwind', 'admin-menu', 'bricks-frontend'],
                 filemtime($fixes_file_path)
             );
         }
-
-        // Encolar admin-menu.min.css desde el directorio wp-admin
-        wp_enqueue_style('admin-menu-styles', admin_url('css/admin-menu.min.css'), [], null);
     }
 }
 add_action('admin_enqueue_scripts', 'flowtitude_enqueue_bricks_assets_admin');
@@ -122,136 +155,6 @@ function remover_common_css_en_dashboard($hook_suffix) {
     }
 }
 add_action('admin_enqueue_scripts', 'remover_common_css_en_dashboard', 100);
-
-add_filter('bricks/dynamic_data/render_tag', 'procesar_etiquetas_dinamicas_dashboard', 10, 3);
-add_filter('bricks/dynamic_data/render_content', 'procesar_etiquetas_dinamicas_dashboard', 20, 3);
-add_filter('bricks/frontend/render_data', 'procesar_etiquetas_dinamicas_dashboard', 20, 2);
-
-function procesar_etiquetas_dinamicas_dashboard($tag, $post = null, $context = 'text') {
-    // Asegurarse de que el contexto sea el correcto
-    if ($context !== 'dashboard') {
-        return $tag;
-    }
-
-    // Lógica específica para el dashboard
-    switch ($tag) {
-        case 'mi_etiqueta_personalizada':
-            return 'Valor personalizado para el dashboard';
-        // Añadir más casos según sea necesario
-        default:
-            // Intentar procesar la etiqueta usando la lógica de Bricks
-            if (function_exists('bricks_process_dynamic_tag')) {
-                return bricks_process_dynamic_tag($tag, $post);
-            }
-            return $tag;
-    }
-}
-
-function encolar_bricks_assets_dashboard() {
-    // Los assets de Bricks se cargan automáticamente por el plugin
-    // No necesitamos encolar archivos adicionales
-}
-add_action('admin_enqueue_scripts', 'encolar_bricks_assets_dashboard');
-
-// Filtros para procesar etiquetas dinámicas
-add_filter('bricks/dynamic_data/render_content', 'procesar_contenido_etiquetas_dinamicas_dashboard', 20, 2);
-add_filter('bricks/frontend/render_data', 'procesar_contenido_etiquetas_dinamicas_dashboard', 20, 2);
-
-// Cargar el parser de Bricks dinámicamente
-$bricks_parser_path = flowtitude_get_path('bricks.parser');
-if ($bricks_parser_path && file_exists($bricks_parser_path)) {
-    require_once $bricks_parser_path;
-} else {
-    flowtitude_debug_log('No se pudo cargar el parser de Bricks: ' . $bricks_parser_path, 'warning', 'dashboard');
-}
-
-use Bricks\Integrations\Dynamic_Data\Dynamic_Data_Parser;
-
-function procesar_contenido_etiquetas_dinamicas_dashboard() {
-    $args = func_get_args();
-    $content = $args[0];
-    $post = isset($args[1]) ? $args[1] : null;
-    $context = isset($args[2]) ? $args[2] : 'text';
-
-    // Verificar si el contenido contiene etiquetas dinámicas
-    if (strpos($content, '{') === false) {
-        return $content;
-    }
-
-    $parser = new Dynamic_Data_Parser();
-
-    // Procesar etiquetas dinámicas
-    $content = preg_replace_callback('/{([^}]+)}/', function($matches) use ($post, $parser) {
-        $parsed_data = $parser->parse($matches[1]);
-        $tag = $parsed_data['tag'];
-        $args = $parsed_data['args'];
-
-        // Manejar etiquetas de usuario
-        
-        if (strpos($tag, 'wp_user_') === 0) {
-            $user = wp_get_current_user();
-            switch ($tag) {
-                case 'wp_user_nickname':
-                    return $user->nickname;
-                case 'wp_user_avatar':
-                    return get_avatar_url($user->ID);
-                // Añadir más casos según sea necesario
-            }
-        }
-      
-
-        // Sistema de procesamiento para ACF
-        if (function_exists('get_field')) {
-            $acf_value = get_field($tag, $post);
-            if ($acf_value) {
-                return $acf_value;
-            }
-        }
-
-        // Preparar integración con Jet Engine
-        // Aquí podríamos añadir lógica específica para Jet Engine
-
-        // Si no se encuentra un reemplazo, devolver la etiqueta sin cambios
-        return '{' . $tag . '}';
-    }, $content);
-
-    return $content;
-}
-
-class DashboardDynamicTagProcessor {
-    public static function process_tags($content, $post = null) {
-        // Verificar si el contenido contiene etiquetas dinámicas
-        if (strpos($content, '{') === false) {
-            return $content;
-        }
-
-        // Solo log si el logging está activado
-        if (function_exists('flowtitude_debug_log')) {
-            flowtitude_debug_log('Procesando contenido: ' . $content, 'debug', 'dashboard');
-        }
-
-        // Procesar etiquetas dinámicas de Bricks
-        if (function_exists('bricks_process_dynamic_tag')) {
-            $content = preg_replace_callback('/{([^}]+)}/', function($matches) use ($post) {
-                $processed_tag = bricks_process_dynamic_tag($matches[1], $post);
-                // Solo log si el logging está activado
-                if (function_exists('flowtitude_debug_log')) {
-                    flowtitude_debug_log('Etiqueta procesada: ' . $matches[1] . ' -> ' . $processed_tag, 'debug', 'dashboard');
-                }
-                return $processed_tag;
-            }, $content);
-        }
-
-        // Procesar etiquetas de Jet Engine y ACF
-        // Aquí puedes añadir lógica específica para Jet Engine y ACF si es necesario
-
-        return $content;
-    }
-}
-
-// Reemplazar el uso directo de la función por la clase
-add_filter('bricks/dynamic_data/render_content', ['DashboardDynamicTagProcessor', 'process_tags'], 20, 2);
-add_filter('bricks/frontend/render_data', ['DashboardDynamicTagProcessor', 'process_tags'], 20, 2);
 
 // Eliminar widgets/metaboxes nativos pero dejar el personalizado
 add_action('wp_dashboard_setup', function() {
